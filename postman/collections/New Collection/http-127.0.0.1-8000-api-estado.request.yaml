@@ -1,0 +1,18 @@
+$kind: http-request
+name: http://127.0.0.1:8000/api/estado
+description: ""
+url: http://127.0.0.1:8000/api/estado
+method: GET
+body:
+  type: json
+  content: ""
+scripts:
+  - type: beforeRequest
+    code: ""
+    language: text/javascript
+settings:
+  strictSSL: false
+  followRedirects: true
+  disableCookies: false
+  maxResponseSize: 52428800
+order: 1784832655023
