@@ -1,99 +1,326 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container pb-5">
+<style>
+    /* Paleta de colores viva: Turquesa, Celeste y tonos frescos */
+    :root {
+        --app-bg: #f0fdfa;         /* Fondo menta/turquesa ultra claro */
+        --card-bg: #ffffff;
+        --primary-cyan: #06b6d4;   /* Celeste vibrante */
+        --primary-teal: #14b8a6;   /* Turquesa */
+        --sky-blue: #0ea5e9;       /* Azul cielo */
+        --text-dark: #1e293b;      /* Azul marino muy oscuro para textos */
+        --text-muted: #64748b;     /* Gris azulado para textos secundarios */
+        --border-soft: #cffafe;    /* Borde celeste muy claro */
+        --shadow-sm: 0 4px 6px -1px rgba(6, 182, 212, 0.1), 0 2px 4px -1px rgba(6, 182, 212, 0.06);
+        --shadow-md: 0 10px 15px -3px rgba(6, 182, 212, 0.1), 0 4px 6px -2px rgba(6, 182, 212, 0.05);
+    }
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Reporte Detallado de Producción</h2>
-        <a href="{{ url('/reportes') }}" class="btn btn-secondary">
-            ⬅ Volver al Listado
-        </a>
-    </div>
-    <a
-        href="{{ url('/reportes/'.$produccion->id.'/pdf') }}"
-        class="btn btn-danger">
+    .report-wrapper {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        color: var(--text-dark);
+    }
 
-        Descargar PDF
+    /* Tarjetas principales */
+    .pretty-card {
+        background-color: var(--card-bg);
+        border: none;
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
 
-        </a>
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">📋 Información General del Lote</h4>
+    .pretty-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Encabezados de tarjeta con gradiente turquesa/celeste */
+    .pretty-card-header {
+        background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--primary-teal) 100%);
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+
+    .pretty-card-title {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pretty-card-body {
+        padding: 1.75rem;
+    }
+
+    /* Estilos de datos */
+    .data-group {
+        margin-bottom: 1.2rem;
+    }
+
+    .data-label {
+        color: var(--primary-teal);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.3rem;
+        display: block;
+    }
+
+    .data-value {
+        color: var(--text-dark);
+        font-size: 1.05rem;
+        font-weight: 500;
+    }
+
+    /* Cajas de métricas (Temperaturas) */
+    .metric-box {
+        background: #f8fafc;
+        border: 2px solid var(--border-soft);
+        border-radius: 12px;
+        padding: 1.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .metric-box:hover {
+        border-color: var(--primary-cyan);
+        background: #f0fdfa;
+        transform: translateY(-3px);
+    }
+
+    .metric-label {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .metric-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 0.5rem;
+        display: block;
+        background: linear-gradient(135deg, var(--sky-blue), var(--primary-teal));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Tablas bonitas */
+    .pretty-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .pretty-table th {
+        background-color: #f0f9ff;
+        color: var(--sky-blue);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        padding: 1rem;
+        border-bottom: 2px solid var(--border-soft);
+    }
+
+    .pretty-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #f1f5f9;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+    }
+
+    .pretty-table tbody tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    /* Botones estilizados */
+    .btn-celeste {
+        background: var(--card-bg);
+        color: var(--primary-cyan);
+        border: 2px solid var(--primary-cyan);
+        border-radius: 50px;
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-celeste:hover {
+        background: var(--primary-cyan);
+        color: white;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn-turquesa {
+        background: linear-gradient(135deg, var(--primary-cyan), var(--primary-teal));
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+    }
+
+    .btn-turquesa:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(20, 184, 166, 0.4);
+        color: white;
+    }
+
+    /* Etiquetas/Badges globales más suaves */
+    .badge {
+        padding: 0.4em 0.8em;
+        border-radius: 8px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+</style>
+
+<div class="container pb-5 report-wrapper pt-3">
+
+    <!-- Encabezado de la página -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <h2 class="fw-bold m-0" style="color: var(--text-dark);">
+            <span style="color: var(--primary-teal);">💧</span> Reporte Detallado de Producción
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="{{ url('/reportes') }}" class="btn-celeste">
+                ⬅ Volver al Listado
+            </a>
+            <a href="{{ url('/reportes/'.$produccion->id.'/pdf') }}" class="btn-turquesa">
+                📄 Descargar PDF
+            </a>
         </div>
-        <div class="card-body">
+    </div>
+    
+    <!-- Panel 1: Información General -->
+    <div class="pretty-card">
+        <div class="pretty-card-header">
+            <h4 class="pretty-card-title">📋 Información General del Lote</h4>
+        </div>
+        <div class="pretty-card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Producción ID:</strong> <span class="badge bg-dark">#{{ $produccion->id }}</span></p>
-                    <!-- Código sugerido -->
-                    <p>
-                        <strong>Productor:</strong> 
-                        {{ $produccion->user?->nombre_unidad_productiva ?? $produccion->user?->name ?? '-' }}
-                    </p>
-                    <p><strong>Producto a Elaborar:</strong> {{ $produccion->producto->nombre }}</p>
-                    <p><strong>Estado del Lote:</strong>
-                        <span class="badge bg-{{ $produccion->estado == 'En proceso' ? 'warning text-dark' : 'success' }}">
-                            {{ $produccion->estado }}
-                        </span>
-                    </p>
+                    <div class="data-group">
+                        <span class="data-label">Producción ID</span>
+                        <div class="data-value"><span class="badge bg-dark">#{{ $produccion->id }}</span></div>
+                    </div>
+                    
+                    <div class="data-group">
+                        <span class="data-label">Productor</span>
+                        <div class="data-value">{{ $produccion->user?->nombre_unidad_productiva ?? $produccion->user?->name ?? '-' }}</div>
+                    </div>
+                    
+                    <div class="data-group">
+                        <span class="data-label">Producto a Elaborar</span>
+                        <div class="data-value fw-bold" style="color: var(--primary-cyan);">{{ $produccion->producto->nombre }}</div>
+                    </div>
+                    
+                    <div class="data-group">
+                        <span class="data-label">Estado del Lote</span>
+                        <div class="data-value">
+                            <span class="badge bg-{{ $produccion->estado == 'En proceso' ? 'warning text-dark' : 'success' }}">
+                                {{ $produccion->estado }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Cantidad de Leche:</strong> {{ number_format($produccion->cantidad_leche, 2) }} Litros</p>
-                    <p><strong>Temperatura Objetivo:</strong> {{ number_format($produccion->temperatura_objetivo, 2) }} °C</p>
-                    <p><strong>Fecha de Inicio:</strong> {{ $produccion->fecha_inicio ? $produccion->fecha_inicio->format('d/m/Y H:i:s') : '-' }}</p>
-                    <p><strong>Fecha de Fin:</strong> {{ $produccion->fecha_fin ? $produccion->fecha_fin->format('d/m/Y H:i:s') : 'Producción Activa' }}</p>
-                    <p><strong>Duración Total:</strong> <span class="badge bg-info text-dark fs-6">{{ $duracion }}</span></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">🌡️ Resumen Métrico de Temperaturas</h4>
-        </div>
-        <div class="card-body">
-            <div class="row text-center">
-                <div class="col-md-3">
-                    <div class="border rounded p-3 bg-light">
-                        <span class="text-muted small d-block">MÍNIMA</span>
-                        <span class="fs-4 fw-bold text-success">{{ $temperaturaMinima ?? '0.00' }} °C</span>
+                    <div class="data-group">
+                        <span class="data-label">Cantidad de Leche</span>
+                        <div class="data-value">{{ number_format($produccion->cantidad_leche, 2) }} Litros</div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 bg-light">
-                        <span class="text-muted small d-block">MÁXIMA</span>
-                        <span class="fs-4 fw-bold text-danger">{{ $temperaturaMaxima ?? '0.00' }} °C</span>
+                    
+                    <div class="data-group">
+                        <span class="data-label">Temperatura Objetivo</span>
+                        <div class="data-value">{{ number_format($produccion->temperatura_objetivo, 2) }} °C</div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 bg-light">
-                        <span class="text-muted small d-block">PROMEDIO</span>
-                        <span class="fs-4 fw-bold text-primary">{{ $temperaturaPromedio ?? '0.00' }} °C</span>
+                    
+                    <div class="data-group">
+                        <span class="data-label">Fecha de Inicio</span>
+                        <div class="data-value">{{ $produccion->fecha_inicio ? $produccion->fecha_inicio->format('d/m/Y H:i:s') : '-' }}</div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border rounded p-3 bg-light">
-                        <span class="text-muted small d-block">TOTAL LECTURAS</span>
-                        <span class="fs-4 fw-bold text-dark">{{ $produccion->lecturas->count() }}</span>
+                    
+                    <div class="data-group">
+                        <span class="data-label">Fecha de Fin</span>
+                        <div class="data-value">{{ $produccion->fecha_fin ? $produccion->fecha_fin->format('d/m/Y H:i:s') : 'Producción Activa' }}</div>
+                    </div>
+                    
+                    <div class="data-group mb-0">
+                        <span class="data-label">Duración Total</span>
+                        <div class="data-value">
+                            <span class="badge bg-info text-dark fs-6">{{ $duracion }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">⚠️ Alertas Registradas durante el Proceso</h4>
+    <!-- Panel 2: Métricas -->
+    <div class="pretty-card">
+        <div class="pretty-card-header" style="background: linear-gradient(135deg, var(--sky-blue) 0%, var(--primary-cyan) 100%);">
+            <h4 class="pretty-card-title">🌡️ Resumen Métrico de Temperaturas</h4>
         </div>
-        <div class="card-body">
+        <div class="pretty-card-body">
+            <div class="row text-center g-3">
+                <div class="col-md-3">
+                    <div class="metric-box">
+                        <span class="metric-label">MÍNIMA</span>
+                        <span class="metric-value">{{ $temperaturaMinima ?? '0.00' }} °C</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-box">
+                        <span class="metric-label">MÁXIMA</span>
+                        <span class="metric-value">{{ $temperaturaMaxima ?? '0.00' }} °C</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-box">
+                        <span class="metric-label">PROMEDIO</span>
+                        <span class="metric-value">{{ $temperaturaPromedio ?? '0.00' }} °C</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-box">
+                        <span class="metric-label">TOTAL LECTURAS</span>
+                        <span class="metric-value" style="background: var(--text-dark); -webkit-background-clip: text;">
+                            {{ $produccion->lecturas->count() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel 3: Alertas -->
+    <div class="pretty-card">
+        <div class="pretty-card-header" style="background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);">
+            <h4 class="pretty-card-title">⚠️ Alertas Registradas durante el Proceso</h4>
+        </div>
+        <div class="pretty-card-body p-0">
             @if($produccion->alertas->count())
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
-                        <thead class="table-danger">
+                    <table class="pretty-table">
+                        <thead style="background-color: #fff1f2;">
                             <tr>
-                                <th>Tipo de Alerta</th>
-                                <th>Mensaje Detallado</th>
-                                <th class="text-center">Atendida</th>
+                                <th style="color: #e11d48;">Tipo de Alerta</th>
+                                <th style="color: #e11d48;">Mensaje Detallado</th>
+                                <th class="text-center" style="color: #e11d48;">Atendida</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -112,22 +339,24 @@
                     </table>
                 </div>
             @else
-                <div class="text-center py-3 text-muted">
-                    <p class="mb-0">✅ Excelente: No se registraron anomalías ni alertas en esta producción.</p>
+                <div class="text-center py-5">
+                    <p class="mb-0 fw-bold text-success fs-5">Excelente</p>
+                    <p class="text-muted">No se registraron anomalías ni alertas en esta producción.</p>
                 </div>
             @endif
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">📜 Historial Cronológico de Eventos (Bitácora del Lote)</h4>
+    <!-- Panel 4: Historial de Eventos -->
+    <div class="pretty-card">
+        <div class="pretty-card-header" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+            <h4 class="pretty-card-title">📜 Historial Cronológico de Eventos (Bitácora del Lote)</h4>
         </div>
-        <div class="card-body">
+        <div class="pretty-card-body p-0">
             @if($produccion->eventos->count())
                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-striped table-hover align-middle mb-0">
-                        <thead class="table-dark sticky-top">
+                    <table class="pretty-table">
+                        <thead style="position: sticky; top: 0; z-index: 1;">
                             <tr>
                                 <th>Fecha y Hora</th>
                                 <th>Elemento / Acción</th>
@@ -137,7 +366,7 @@
                         <tbody>
                             @foreach($produccion->eventos as $evento)
                             <tr>
-                                <td class="text-muted small">
+                                <td class="text-muted small fw-medium">
                                     {{ $evento->fecha_hora->format('d/m/Y H:i:s') }}
                                 </td>
                                 <td>
@@ -152,14 +381,16 @@
                                     @endphp
                                     <span class="badge bg-{{ $color }}">{{ $evento->tipo }}</span>
                                 </td>
-                                <td><strong>{{ $evento->descripcion }}</strong></td>
+                                <td><strong style="color: var(--text-dark);">{{ $evento->descripcion }}</strong></td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             @else
-                <p class="text-muted mb-0">No se encontraron eventos registrados para este lote.</p>
+                <div class="text-center py-5">
+                    <p class="text-muted mb-0 fs-5">No se encontraron eventos registrados para este lote.</p>
+                </div>
             @endif
         </div>
     </div>

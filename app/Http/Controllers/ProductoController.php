@@ -71,16 +71,25 @@ public function store(Request $request)
 {
     $request->validate([
 
-        'nombre' => 'required|string|max:100|unique:productos,nombre',
+    'nombre' => [
+        'required',
+        'string',
+        'max:100',
+        'unique:productos,nombre',
+        'regex:/^[a-zA-ZÀ-ÿñÑ0-9\s]+$/', // solo letras, números y espacios
+    ],
 
-        'temperatura_minima' => 'required|numeric',
+    'temperatura_minima' => 'required|numeric',
 
-        'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
-        'temperatura_pasteurizacion' => 'required|numeric', // <--- AGREGAR
+    'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
+    'temperatura_pasteurizacion' => 'required|numeric',
 
-        'descripcion' => 'nullable|string',
+    'descripcion' => 'nullable|string|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]*$/',
 
-    ]);
+], [
+    'nombre.regex' => 'El nombre no puede contener caracteres especiales.',
+    'descripcion.regex' => 'La descripción contiene caracteres no permitidos.',
+]);
 
     Producto::create([
 
@@ -126,17 +135,26 @@ public function update(Request $request, Producto $producto)
 {
     $request->validate([
 
-        'nombre' => 'required|string|max:100|unique:productos,nombre,' . $producto->id,
+    'nombre' => [
+        'required',
+        'string',
+        'max:100',
+        'unique:productos,nombre,' . $producto->id,
+        'regex:/^[a-zA-ZÀ-ÿñÑ0-9\s]+$/',
+    ],
 
-        'temperatura_minima' => 'required|numeric',
+    'temperatura_minima' => 'required|numeric',
 
-        'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
+    'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
 
-        'temperatura_pasteurizacion' => 'required|numeric', // <--- AGREGAR
+    'temperatura_pasteurizacion' => 'required|numeric',
 
-        'descripcion' => 'nullable|string',
+    'descripcion' => 'nullable|string|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]*$/',
 
-    ]);
+], [
+    'nombre.regex' => 'El nombre no puede contener caracteres especiales.',
+    'descripcion.regex' => 'La descripción contiene caracteres no permitidos.',
+]);
 
     $producto->update([
 

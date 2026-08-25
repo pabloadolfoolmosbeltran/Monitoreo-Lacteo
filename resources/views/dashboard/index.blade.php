@@ -2,32 +2,149 @@
 
 @section('content')
 
-<h2 class="mb-4">Dashboard</h2>
+<style>
+    .dash-title {
+        font-weight: 600;
+        color: #1e293b;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
 
+    .stat-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        border-left: 4px solid var(--accent-blue, #0ea5e9);
+        transition: transform 0.15s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-card .stat-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        background: rgba(14, 165, 233, 0.1);
+        color: #0ea5e9;
+    }
+
+    .stat-card h5 {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-card h2 {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0;
+    }
+
+    .panel-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    .panel-card .card-header {
+        background: #1e293b !important;
+        border: none;
+        padding: 0.9rem 1.25rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+
+    .estado-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+
+    .estado-valor {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .mini-stat-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .mini-stat-card h5 {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .mini-stat-card h2 {
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .chart-card .card-header {
+        background: #1e293b !important;
+        border: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
 <div class="row">
     <div class="col-md-4 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>Total Usuarios</h5>
-                <h2>{{ $totalUsuarios }}</h2>
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                <div>
+                    <h5>Total Usuarios</h5>
+                    <h2>{{ $totalUsuarios }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- NOTA: esta tarjeta muestra la misma variable $totalUsuarios que la anterior.
+         No se modificó porque no tengo certeza de qué métrica debería ir aquí
+         (usuarios activos, lecturas del día, etc.). Revisar si es intencional
+         o si falta pasar una variable distinta desde el controlador. --}}
+    <div class="col-md-4 mb-3">
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon"><i class="bi bi-person-check"></i></div>
+                <div>
+                    <h5>Usuarios Registrados</h5>
+                    <h2>{{ $totalUsuarios }}</h2>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="col-md-4 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>Usuarios Registrados</h5>
-                <h2>{{ $totalUsuarios }}</h2>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>Dispositivos</h5>
-                <h2>{{ $totalDispositivos }}</h2>
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon"><i class="bi bi-cpu"></i></div>
+                <div>
+                    <h5>Dispositivos</h5>
+                    <h2>{{ $totalDispositivos }}</h2>
+                </div>
             </div>
         </div>
     </div>
@@ -35,65 +152,71 @@
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>Producciones Activas</h5>
-                <h2 id="produccionesActivas">
-                    {{ $produccionesActivas }}
-                </h2>
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon"><i class="bi bi-gear-wide-connected"></i></div>
+                <div>
+                    <h5>Producciones Activas</h5>
+                    <h2 id="produccionesActivas">
+                        {{ $produccionesActivas }}
+                    </h2>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="col-md-6 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5>Alertas Pendientes</h5>
-                <h2 id="alertasPendientes">
-                    {{ $alertasPendientes }}
-                </h2>
+        <div class="card stat-card">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                <div>
+                    <h5>Alertas Pendientes</h5>
+                    <h2 id="alertasPendientes">
+                        {{ $alertasPendientes }}
+                    </h2>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-@if($ultimaLectura)
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <h4>Última Temperatura Registrada</h4>
-        <h2 id="temperaturaActual">
-            {{ $ultimaLectura ? $ultimaLectura->temperatura : '--' }} °C
-        </h2>
+<div class="card stat-card mb-4">
+    <div class="card-body d-flex align-items-center gap-3">
+        <div class="stat-icon"><i class="bi bi-thermometer-half"></i></div>
+        <div>
+            <h5>Última Temperatura Registrada</h5>
+            <h2 id="temperaturaActual">
+                {{ $sensor?->temperatura_actual ?? ($ultimaLectura->temperatura ?? '--') }} °C
+            </h2>
+        </div>
     </div>
 </div>
-@endif
 
-@if($produccion)
 <div class="row">
     <div class="col-md-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                Estado actual del sistema
+        <div class="card panel-card">
+            <div class="card-header text-white">
+                <i class="bi bi-activity me-2"></i>Estado actual del sistema
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <h6>Producción</h6>
-                        <span class="badge bg-success">
-                            {{ $produccion->estado }}
+                        <div class="estado-label">Producción</div>
+                        <span class="badge bg-{{ $produccion ? 'success' : 'secondary' }}">
+                            {{ $produccion->estado ?? 'Sin producción' }}
                         </span>
                     </div>
 
                     <div class="col-md-3">
-                        <h6>Temperatura objetivo</h6>
-                        <strong>
-                            {{ $produccion->temperatura_objetivo }} °C
-                        </strong>
+                        <div class="estado-label">Temperatura objetivo</div>
+                        <span class="estado-valor">
+                            {{ $produccion?->temperatura_objetivo ?? '--' }} °C
+                        </span>
                     </div>
 
                     <div class="col-md-3">
-                        <h6>Motor</h6>
-                        <span id="estadoMotorTexto">
+                        <div class="estado-label">Motor</div>
+                        <span id="estadoMotorTexto" class="estado-valor">
                             @if($motor && $motor->estado)
                                 🟢 Encendido
                             @else
@@ -103,8 +226,8 @@
                     </div>
 
                     <div class="col-md-3">
-                        <h6>Ventilador</h6>
-                        <span id="estadoVentiladorTexto">
+                        <div class="estado-label">Ventilador</div>
+                        <span id="estadoVentiladorTexto" class="estado-valor">
                             @if($ventilador && $ventilador->estado)
                                 🟢 Encendido
                             @else
@@ -118,8 +241,8 @@
 
                 <div class="row">
                     <div class="col-md-4">
-                        <h6>Sensor</h6>
-                        <span id="estadoSensorTexto">
+                        <div class="estado-label">Sensor</div>
+                        <span id="estadoSensorTexto" class="estado-valor">
                             @if($sensor && $sensor->estado == 'Activo')
                                 🟢 Activo
                             @else
@@ -129,16 +252,14 @@
                     </div>
 
                     <div class="col-md-4">
-                        <h6>Última lectura</h6>
-                        <strong id="ultimaLecturaTexto">
-                            @if($ultimaLectura)
-                                {{ $ultimaLectura->temperatura }} °C
-                            @endif
-                        </strong>
+                        <div class="estado-label">Última lectura</div>
+                        <span id="ultimaLecturaTexto" class="estado-valor">
+                            {{ $sensor?->temperatura_actual ?? ($ultimaLectura->temperatura ?? '--') }} °C
+                        </span>
                     </div>
 
                     <div class="col-md-4">
-                        <h6>Alertas pendientes</h6>
+                        <div class="estado-label">Alertas pendientes</div>
                         <span id="alertasPendientesBadge" class="badge bg-danger">
                             {{ $alertasPendientes }}
                         </span>
@@ -149,19 +270,19 @@
     </div>
 </div>
 
-<hr>
+<hr class="my-4">
 
 <div class="row mt-3">
     <div class="col-md-6">
-        <h6>ESP32</h6>
+        <div class="estado-label">ESP32</div>
         <span id="esp32Badge" class="badge {{ $esp32Conectado ? 'bg-success' : 'bg-danger' }}">
             {{ $esp32Conectado ? '🟢 Conectado' : '🔴 Desconectado' }}
         </span>
     </div>
 
     <div class="col-md-6">
-        <h6>Última conexión</h6>
-        <span id="esp32UltimaConexion">
+        <div class="estado-label">Última conexión</div>
+        <span id="esp32UltimaConexion" class="estado-valor">
             @if($dispositivo && $dispositivo->ultima_conexion)
                 {{ $dispositivo->ultima_conexion->format('d/m/Y H:i:s') }}
             @else
@@ -173,36 +294,36 @@
 
 <div class="row mt-3">
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card mini-stat-card">
             <div class="card-body text-center">
-                <h5>Motor</h5>
+                <h5><i class="bi bi-gear me-1"></i>Motor</h5>
                 <h2 id="estadoMotor">--</h2>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card mini-stat-card">
             <div class="card-body text-center">
-                <h5>Ventilador</h5>
+                <h5><i class="bi bi-fan me-1"></i>Ventilador</h5>
                 <h2 id="estadoVentilador">--</h2>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card mini-stat-card">
             <div class="card-body text-center">
-                <h5>Sensor</h5>
+                <h5><i class="bi bi-broadcast me-1"></i>Sensor</h5>
                 <h2 id="estadoSensor">--</h2>
             </div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card shadow-sm">
+        <div class="card mini-stat-card">
             <div class="card-body text-center">
-                <h5>ESP32</h5>
+                <h5><i class="bi bi-router me-1"></i>ESP32</h5>
                 <h2 id="estadoESP32">Desconocido</h2>
             </div>
         </div>
@@ -211,9 +332,9 @@
 
 <div class="row mt-4">
     <div class="col-md-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                📈 Historial de Temperatura en Tiempo Real
+        <div class="card chart-card">
+            <div class="card-header text-white">
+                <i class="bi bi-graph-up"></i> Historial de Temperatura en Tiempo Real
             </div>
             <div class="card-body">
                 <canvas id="graficoTemperatura" style="max-height: 250px; width: 100%;"></canvas>
@@ -221,7 +342,6 @@
         </div>
     </div>
 </div>
-@endif
 
 <!-- Modal de Alerta de Temperatura Crítica -->
 <div class="modal fade" id="modalAlertaEmergencia" tabindex="-1" aria-labelledby="modalAlertaLabel" aria-hidden="true" data-bs-backdrop="static">
@@ -296,6 +416,7 @@ let beepInterval = null;
 let alertaTemperaturaDisparada = false;          
 let alertaFinalizadaDisparada = false;
 let idProduccionNotificada = null;
+let notificacionFinalizadaActiva = false;
 
 // Guarda el estado de la producción visto en el polling anterior,
 // para solo disparar alertas cuando hay una TRANSICIÓN real y no al cargar la página.
@@ -349,7 +470,9 @@ function silenciarAlarma() {
     alarmaSonando = false;
     alarmaSilenciada = true; 
     
-    if (idProduccionNotificada) {
+    // Solo confirmar la notificación de finalización. Silenciar la alerta de
+    // temperatura no debe impedir que se muestre el aviso al cerrar el lote.
+    if (notificacionFinalizadaActiva && idProduccionNotificada) {
         sessionStorage.setItem(`prod_silenciada_${idProduccionNotificada}`, 'true');
     }
 
@@ -434,19 +557,23 @@ async function actualizarDashboard() {
         const panelMensaje = document.getElementById('panelAlertaMensaje');
         const panelDetalle = document.getElementById('panelAlertaDetalle');
 
+        // FIX: antes "estadoProd" se calculaba aquí dentro del if(datos.produccion)
+        // y se volvía a calcular más abajo, fuera del if, con la misma expresión.
+        // Se calcula una sola vez y se reutiliza en todo el bloque.
+        const estadoProd = datos.produccion?.estado?.toLowerCase() ?? '';
+
         if (datos.produccion) {
             const prodId = datos.produccion.id;
             idProduccionNotificada = prodId;
 
-            const estadoProd = datos.produccion.estado?.toLowerCase() ?? '';
             const produccionFinalizada = (estadoProd === "finalizada" || estadoProd === "completada");
 
             const yaNotificadaEnSesion = sessionStorage.getItem(`prod_silenciada_${prodId}`) === 'true';
 
-            // Si la producción vuelve a estar "En proceso", se rearma la alerta
-            // de finalización para la próxima transición a "Finalizada".
+            // Una nueva producción activa rearma el aviso para su futura finalización.
             if (estadoProd === "en proceso") {
                 alertaFinalizadaDisparada = false;
+                notificacionFinalizadaActiva = false;
             }
 
             const tempPasteurizacion = datos.produccion.producto?.temperatura_pasteurizacion 
@@ -480,10 +607,11 @@ async function actualizarDashboard() {
                 }
             } 
             // 2. Modal / Panel Producción Finalizada
-            // Solo se dispara si la página observó el cambio: En proceso -> Finalizada
+            // Solo se muestra al detectar el cambio real de "En proceso" a "Finalizada".
             else if (produccionFinalizada && estadoProduccionAnterior === "en proceso" && !alertaFinalizadaDisparada && !yaNotificadaEnSesion) {
                 alertaFinalizadaDisparada = true;
-                sessionStorage.setItem(`prod_silenciada_${prodId}`, 'true');
+                notificacionFinalizadaActiva = true;
+                alarmaSilenciada = false;
                 reproducirAlarmaSonora(); 
                 
                 if (panelContenedor) {
@@ -509,8 +637,6 @@ async function actualizarDashboard() {
             estadoProduccionAnterior = null;
         }
 
-        const estadoProd = datos.produccion?.estado?.toLowerCase() ?? '';
-        
         const prodActivas = document.getElementById("produccionesActivas");
         if (prodActivas) prodActivas.innerHTML = (estadoProd === "en proceso") ? "1" : "0";
 

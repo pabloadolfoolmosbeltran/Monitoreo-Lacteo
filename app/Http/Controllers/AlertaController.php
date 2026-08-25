@@ -7,7 +7,7 @@ use App\Models\Alerta;
 class AlertaController extends Controller
 {
     public function index()
-    {
+    {   
         $alertas = Alerta::with([
                 'produccion',
                 'lectura'

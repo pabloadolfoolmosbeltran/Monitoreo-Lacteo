@@ -116,7 +116,7 @@
 
     <hr style="border: 0; border-top: 1px solid #dee2e6; margin-bottom: 20px;">
 
-    <div class="section-title">📋 Información General del Lote</div>
+    <div class="section-title">Información General del Lote</div>
     <table>
         <tr>
             <th>ID de Producción</th>
@@ -154,7 +154,7 @@
         </tr>
     </table>
 
-    <div class="section-title">🌡️ Resumen Métrico de Temperaturas</div>
+    <div class="section-title">Resumen Métrico de Temperaturas</div>
     <table>
         <tr>
             <th>Temperatura Inicial</th>
@@ -181,7 +181,7 @@
         {{ $huboDesviaciones ? 'Se detectaron desviaciones de temperatura fuera del rango de tolerancia establecido durante el proceso.' : 'Temperatura mantenida exitosamente dentro del rango de tolerancia establecido.' }}
     </div>
 
-    <div class="section-title">⚠️ Alertas Registradas en el Proceso</div>
+    <div class="section-title">Alertas Registradas en el Proceso</div>
     @if($produccion->alertas->count())
         <table class="data-table">
             <thead>

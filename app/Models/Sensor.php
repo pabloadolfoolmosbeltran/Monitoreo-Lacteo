@@ -19,7 +19,8 @@ class Sensor extends Model
         'tipo',
         'unidad',
         'estado',
-        'numero_serie'
+        'numero_serie',
+        'temperatura_actual'
     ];
 
     /**

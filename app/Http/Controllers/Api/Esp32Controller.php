@@ -57,10 +57,31 @@ class Esp32Controller extends Controller
         ]);
 
         $tempActual = $request->temperatura;
+
+        // Siempre actualizamos la temperatura actual del sensor
+        $sensor = Sensor::first();
+        if ($sensor) {
+            $sensor->update(['temperatura_actual' => $tempActual]);
+        }
+
         $produccion = Produccion::with('producto')->where('estado', 'En proceso')->first();
 
         if (!$produccion) {
-            return response()->json(['success' => false, 'mensaje' => 'No hay producción activa.'], 404);
+            // Sin producción activa: guardamos datos para la gráfica global
+            $chartKey = "chart_global";
+            $historial = Cache::get($chartKey, []);
+            $historial[] = ['t' => now()->format('H:i:s'), 'v' => $tempActual];
+            if (count($historial) > 20) {
+                array_shift($historial);
+            }
+            Cache::put($chartKey, $historial, now()->addHours(24));
+
+            return response()->json([
+                'success' => true,
+                'temperatura' => $tempActual,
+                'estado_produccion' => null,
+                'etapa' => null
+            ]);
         }
 
         // ==========================================================================
@@ -89,9 +110,11 @@ class Esp32Controller extends Controller
         // ==========================================================================
         // 2. PASTEURIZACIÓN Y ALERTAS DE 70°C
         // ==========================================================================
-        if ($tempActual >= 70) {
+        $tempPasteurizacion = $produccion->producto->temperatura_pasteurizacion ?? 70.0;
+        if ($tempActual >= $tempPasteurizacion) {
             $existe = Alerta::where('produccion_id', $produccion->id)
                             ->where('tipo', 'LIKE', '%Pasteuriz%')
+                            ->where('atendida', false)
                             ->exists();
             if (!$existe) {
                 Alerta::create([
@@ -116,7 +139,8 @@ class Esp32Controller extends Controller
                 // VALIDACIÓN CRUCIAL:
                 // 1. $tempActual > 0 evita que lecturas de error del sensor (0 o -127) apaguen el sistema.
                 // 2. $tempActual <= $limiteEnfriamiento verifica si ya se enfrió lo suficiente.
-                if ($tempActual > 0 && $tempActual <= $limiteEnfriamiento) {
+                $sensorValido = ($tempActual > -50 && $tempActual < 150);
+                if ($sensorValido && $tempActual <= $limiteEnfriamiento) {
 
                     $motor = Actuador::where('tipo', 'Motor')->first();
                     $ventilador = Actuador::where('tipo', 'Ventilador')->first();
@@ -187,10 +211,14 @@ class Esp32Controller extends Controller
 
         if ($produccion) {
             $chartKey = "chart_produccion_{$produccion->id}";
-            return response()->json(Cache::get($chartKey, []));
+            $datos = Cache::get($chartKey, []);
+            if (!empty($datos)) {
+                return response()->json($datos);
+            }
         }
 
-        return response()->json([]);
+        // Sin producción o sin datos de producción: usamos la gráfica global
+        return response()->json(Cache::get('chart_global', []));
     }
 
     /**
@@ -261,7 +289,7 @@ class Esp32Controller extends Controller
             $conectado = now()->diffInSeconds($dispositivo->ultima_conexion) <= 25;
         }
 
-        $temperaturaActual = $produccion?->temperatura_final ?? 0.0;
+        $temperaturaActual = $sensor?->temperatura_actual ?? $produccion?->temperatura_final ?? 0.0;
 
         return response()->json([
             'esp32' => [

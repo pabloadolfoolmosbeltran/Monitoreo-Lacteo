@@ -7,10 +7,17 @@
     </label>
 
     <input
-        type="text"
-        name="nombre"
-        class="form-control"
-        value="{{ old('nombre', $producto->nombre ?? '') }}">
+    type="text"
+    name="nombre"
+    id="nombre"
+    class="form-control"
+    value="{{ old('nombre', $producto->nombre ?? '') }}"
+    oninput="this.value = this.value.replace(/[^a-zA-ZÀ-ÿñÑ0-9\s]/g, '')"
+    required
+>
+@error('nombre')
+    <div class="text-danger">{{ $message }}</div>
+@enderror
 
 </div>
 
