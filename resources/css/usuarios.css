@@ -1,0 +1,119 @@
+/* ============================================================
+   USUARIOS.CSS - Estilos del CRUD de usuarios
+   ============================================================ */
+
+/* Contenedor con scroll horizontal optimizado para pantallas pequeñas */
+.table-responsive-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Evita que los botones de acción se rompan en dos líneas */
+.action-buttons {
+    white-space: nowrap;
+}
+
+:root {
+    --milk-bg: #f4fbfb;
+    --card-bg: #ffffff;
+    --turquoise-primary: #008080; /* Turquesa profesional profundo */
+    --turquoise-light: #e0f2f1;   /* Aqua suave / Leche fresca */
+    --turquoise-hover: #006666;
+    --text-main: #2b3a42;
+    --text-muted: #5c768d;
+    --border-soft: #b2dfdb;
+}
+
+.dairy-container {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    padding-bottom: 3rem;
+}
+
+.dairy-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 128, 128, 0.05);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.form-control {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: #fff;
+}
+
+.form-control:focus {
+    border-color: var(--turquoise-primary);
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
+}
+
+/* Sobrescribir botones de Bootstrap con la paleta turquesa */
+.btn-primary {
+    background-color: var(--turquoise-primary) !important;
+    border-color: var(--turquoise-primary) !important;
+    color: #fff !important;
+}
+.btn-primary:hover {
+    background-color: var(--turquoise-hover) !important;
+    border-color: var(--turquoise-hover) !important;
+}
+
+.btn-success {
+    background-color: #00897b !important;
+    border-color: #00796b !important;
+    color: #fff !important;
+}
+.btn-success:hover {
+    background-color: #00695c !important;
+}
+
+.btn-secondary {
+    background-color: var(--turquoise-light) !important;
+    border-color: var(--border-soft) !important;
+    color: var(--turquoise-primary) !important;
+}
+.btn-secondary:hover {
+    background-color: #b2dfdb !important;
+    color: var(--turquoise-hover) !important;
+}
+
+.dairy-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+.dairy-table th {
+    background-color: var(--turquoise-light);
+    color: var(--turquoise-primary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--border-soft);
+    border-top: none;
+}
+
+.dairy-table td {
+    padding: 1rem 1.25rem;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    border-bottom: 1px solid #f0f4f4;
+    vertical-align: middle;
+}
+
+.dairy-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.dairy-table tbody tr:hover {
+    background-color: var(--milk-bg);
+}

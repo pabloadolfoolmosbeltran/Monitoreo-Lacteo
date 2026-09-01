@@ -11,7 +11,6 @@ class Produccion extends Model
 {
     use HasFactory;
 
-    // DEFINICIÓN DE CONSTANTES (Para evitar errores de escritura)
     public const ETAPA_PASTEURIZACION = 'Pasteurizacion';
     public const ETAPA_PRODUCCION = 'Produccion';
     public const ETAPA_FINALIZADA = 'Finalizada';
@@ -23,6 +22,8 @@ class Produccion extends Model
         'producto_id',
         'dispositivo_id',
         'cantidad_leche',
+        'tipo_cuajo',
+        'cantidad_cuajo',
         'temperatura_objetivo',
         'temperatura_inicial',
         'temperatura_final',
@@ -38,6 +39,7 @@ class Produccion extends Model
 
     protected $casts = [
         'cantidad_leche' => 'decimal:2',
+        'cantidad_cuajo' => 'decimal:2',
         'temperatura_objetivo' => 'decimal:2',
         'temperatura_inicial' => 'decimal:2',
         'temperatura_final' => 'decimal:2',

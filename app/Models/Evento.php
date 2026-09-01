@@ -21,7 +21,6 @@ class Evento extends Model
         'fecha_hora' => 'datetime'
     ];
 
-    // Añadimos el tipo de retorno BelongsTo para mantener la consistencia
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

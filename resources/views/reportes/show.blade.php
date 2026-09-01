@@ -2,18 +2,17 @@
 
 @section('content')
 <style>
-    /* Paleta de colores viva: Turquesa, Celeste y tonos frescos */
     :root {
-        --app-bg: #f0fdfa;         /* Fondo menta/turquesa ultra claro */
+        --app-bg: #f0fdfa;        
         --card-bg: #ffffff;
-        --primary-cyan: #06b6d4;   /* Celeste vibrante */
-        --primary-teal: #14b8a6;   /* Turquesa */
-        --sky-blue: #0ea5e9;       /* Azul cielo */
-        --text-dark: #1e293b;      /* Azul marino muy oscuro para textos */
-        --text-muted: #64748b;     /* Gris azulado para textos secundarios */
-        --border-soft: #cffafe;    /* Borde celeste muy claro */
-        --shadow-sm: 0 4px 6px -1px rgba(6, 182, 212, 0.1), 0 2px 4px -1px rgba(6, 182, 212, 0.06);
-        --shadow-md: 0 10px 15px -3px rgba(6, 182, 212, 0.1), 0 4px 6px -2px rgba(6, 182, 212, 0.05);
+        --primary-cyan: #008080;   
+        --primary-teal: #006666;   
+        --sky-blue: #0ea5e9;      
+        --text-dark: #1e293b;     
+        --text-muted: #64748b;    
+        --border-soft: #b2dfdb;    
+        --shadow-sm: 0 4px 6px -1px rgba(0, 128, 128, 0.1), 0 2px 4px -1px rgba(0, 128, 128, 0.06);
+        --shadow-md: 0 10px 15px -3px rgba(0, 128, 128, 0.1), 0 4px 6px -2px rgba(0, 128, 128, 0.05);
     }
 
     .report-wrapper {
@@ -21,7 +20,6 @@
         color: var(--text-dark);
     }
 
-    /* Tarjetas principales */
     .pretty-card {
         background-color: var(--card-bg);
         border: none;
@@ -36,7 +34,6 @@
         box-shadow: var(--shadow-md);
     }
 
-    /* Encabezados de tarjeta con gradiente turquesa/celeste */
     .pretty-card-header {
         background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--primary-teal) 100%);
         color: white;
@@ -58,7 +55,6 @@
         padding: 1.75rem;
     }
 
-    /* Estilos de datos */
     .data-group {
         margin-bottom: 1.2rem;
     }
@@ -79,7 +75,6 @@
         font-weight: 500;
     }
 
-    /* Cajas de métricas (Temperaturas) */
     .metric-box {
         background: #f8fafc;
         border: 2px solid var(--border-soft);
@@ -113,7 +108,6 @@
         -webkit-text-fill-color: transparent;
     }
 
-    /* Tablas bonitas */
     .pretty-table {
         width: 100%;
         border-collapse: separate;
@@ -141,7 +135,6 @@
         background-color: #f8fafc;
     }
 
-    /* Botones estilizados */
     .btn-celeste {
         background: var(--card-bg);
         color: var(--primary-cyan);
@@ -179,19 +172,10 @@
         box-shadow: 0 6px 15px rgba(20, 184, 166, 0.4);
         color: white;
     }
-
-    /* Etiquetas/Badges globales más suaves */
-    .badge {
-        padding: 0.4em 0.8em;
-        border-radius: 8px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-    }
 </style>
 
 <div class="container pb-5 report-wrapper pt-3">
 
-    <!-- Encabezado de la página -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <h2 class="fw-bold m-0" style="color: var(--text-dark);">
             <span style="color: var(--primary-teal);">💧</span> Reporte Detallado de Producción
@@ -228,6 +212,11 @@
                         <span class="data-label">Producto a Elaborar</span>
                         <div class="data-value fw-bold" style="color: var(--primary-cyan);">{{ $produccion->producto->nombre }}</div>
                     </div>
+
+                    <div class="data-group">
+                        <span class="data-label">Tipo de Cuajo Utilizado</span>
+                        <div class="data-value fw-semibold text-dark">{{ $produccion->tipo_cuajo ?? 'No especificado' }}</div>
+                    </div>
                     
                     <div class="data-group">
                         <span class="data-label">Estado del Lote</span>
@@ -238,6 +227,7 @@
                         </div>
                     </div>
                 </div>
+                
                 <div class="col-md-6">
                     <div class="data-group">
                         <span class="data-label">Cantidad de Leche</span>
@@ -247,6 +237,15 @@
                     <div class="data-group">
                         <span class="data-label">Temperatura Objetivo</span>
                         <div class="data-value">{{ number_format($produccion->temperatura_objetivo, 2) }} °C</div>
+                    </div>
+
+                    <div class="data-group">
+                        <span class="data-label">Cantidad de Cuajo</span>
+                        <div class="data-value">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-3 py-2 fs-6">
+                                {{ isset($produccion->cantidad_cuajo) ? number_format($produccion->cantidad_cuajo, 2) . ' ml / g' : 'No especificado' }}
+                            </span>
+                        </div>
                     </div>
                     
                     <div class="data-group">
@@ -280,26 +279,26 @@
                 <div class="col-md-3">
                     <div class="metric-box">
                         <span class="metric-label">MÍNIMA</span>
-                        <span class="metric-value">{{ $temperaturaMinima ?? '0.00' }} °C</span>
+                        <span class="metric-value">{{ isset($temperaturaMinima) ? number_format($temperaturaMinima, 2) : '0.00' }} °C</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="metric-box">
                         <span class="metric-label">MÁXIMA</span>
-                        <span class="metric-value">{{ $temperaturaMaxima ?? '0.00' }} °C</span>
+                        <span class="metric-value">{{ isset($temperaturaMaxima) ? number_format($temperaturaMaxima, 2) : '0.00' }} °C</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="metric-box">
                         <span class="metric-label">PROMEDIO</span>
-                        <span class="metric-value">{{ $temperaturaPromedio ?? '0.00' }} °C</span>
+                        <span class="metric-value">{{ isset($temperaturaPromedio) ? number_format($temperaturaPromedio, 2) : '0.00' }} °C</span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="metric-box">
                         <span class="metric-label">TOTAL LECTURAS</span>
                         <span class="metric-value" style="background: var(--text-dark); -webkit-background-clip: text;">
-                            {{ $produccion->lecturas->count() }}
+                            {{ $totalLecturas ?? $produccion->lecturas->count() }}
                         </span>
                     </div>
                 </div>

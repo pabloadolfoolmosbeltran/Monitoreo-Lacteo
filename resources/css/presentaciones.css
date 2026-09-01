@@ -1,0 +1,109 @@
+/* ============================================================
+   PRESENTACIONES.CSS - Estilos del CRUD de presentaciones
+   ============================================================ */
+
+:root {
+    --bg-main: #f4fbfb;
+    --card-bg: #ffffff;
+    --primary-color: #008080;      /* verde celeste / turquesa primario */
+    --primary-hover: #006666;
+    --secondary-beige: #e0f2f1;    /* verde celeste claro */
+    --border-soft: #b2dfdb;
+    --text-main: #2b3a42;
+    --text-muted: #5c768d;
+}
+
+.custom-container {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    padding-bottom: 3rem;
+}
+
+.custom-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(92, 77, 68, 0.05);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.table-responsive-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.action-buttons {
+    white-space: nowrap;
+}
+
+/* Botones con estilo beige / formal */
+.btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #ffffff !important;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-beige) !important;
+    border-color: var(--border-soft) !important;
+    color: var(--primary-color) !important;
+}
+.btn-secondary:hover {
+    background-color: var(--border-soft) !important;
+    color: var(--primary-hover) !important;
+}
+
+/* Estilos de Tabla */
+.custom-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+.custom-table th {
+    background-color: var(--secondary-beige);
+    color: var(--primary-color);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--border-soft);
+    border-top: none;
+}
+
+.custom-table td {
+    padding: 1rem 1.25rem;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--border-soft);
+    vertical-align: middle;
+}
+
+.custom-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.custom-table tbody tr:hover {
+    background-color: var(--bg-main);
+}
+
+/* Badges formales (sobrios y sin colores brillantes) */
+.badge-neutral {
+    background-color: var(--secondary-beige);
+    color: var(--text-main);
+    border: 1px solid var(--border-soft);
+    font-weight: 600;
+}
+
+.badge-dark-neutral {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    font-weight: 500;
+}

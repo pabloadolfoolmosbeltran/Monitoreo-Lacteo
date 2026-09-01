@@ -34,7 +34,7 @@
                     @foreach($producciones as $produccion)
                         <tr>
                             <td class="ps-4 py-3">
-                                <span class="text-primary fw-bold">#{{ $produccion->id }}</span>
+                                <span class="text-primary fw-bold">{{ $produccion->id }}</span>
                             </td>
 
                             <td class="py-3">

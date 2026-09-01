@@ -13,7 +13,6 @@
             font-size: 11px;
             line-height: 1.4;
         }
-        /* Encabezado del Reporte */
         .header {
             width: 100%;
             border-collapse: collapse;
@@ -39,8 +38,6 @@
             font-weight: bold;
             color: #212529;
         }
-
-        /* Títulos de sección */
         .section-title {
             background-color: #f8f9fa;
             border-left: 4px solid #0d6efd;
@@ -52,8 +49,6 @@
             margin-bottom: 10px;
             text-transform: uppercase;
         }
-
-        /* Tablas de Datos */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -72,8 +67,6 @@
             color: #495057;
             width: 30%;
         }
-
-        /* Tablas de registros (Alertas) */
         .data-table th {
             background-color: #343a40;
             color: #ffffff;
@@ -92,12 +85,17 @@
             border-radius: 3px;
             font-size: 9px;
             font-weight: bold;
+            display: inline-block;
         }
-        .badge-success { background-color: #d1e7dd; color: #0f5132; }
-        .badge-danger { background-color: #f8d7da; color: #842029; }
-        .badge-warning { background-color: #fff3cd; color: #664d03; }
-        .badge-info { background-color: #cff4fc; color: #087990; }
+        .badge-success   { background-color: #d1e7dd; color: #0f5132; }
+        .badge-danger    { background-color: #f8d7da; color: #842029; }
+        .badge-warning   { background-color: #fff3cd; color: #664d03; }
+        .badge-info      { background-color: #cff4fc; color: #087990; }
+        .badge-primary   { background-color: #cfe2ff; color: #0a58ca; }
         .badge-secondary { background-color: #e2e3e5; color: #41464b; }
+        tr {
+            page-break-inside: avoid;
+        }
     </style>
 </head>
 <body>
@@ -126,7 +124,7 @@
         </tr>
         <tr>
             <th>Operador Responsable</th>
-            <td>{{ $produccion->user ? $produccion->user->name : 'No registrado (Histórico)' }}</td>
+            <td>{{ $produccion->user ? $produccion->user->name : 'No registrado' }}</td>
             <th>Rol del Operador</th>
             <td>{{ $produccion->user ? $produccion->user->rol : 'N/A' }}</td>
         </tr>
@@ -135,6 +133,12 @@
             <td>{{ $produccion->producto->nombre }}</td>
             <th>Cantidad de Leche</th>
             <td>{{ number_format($produccion->cantidad_leche, 2) }} Litros</td>
+        </tr>
+        <tr>
+            <th>Tipo de Cuajo</th>
+            <td>{{ $produccion->tipo_cuajo ?? 'No especificado' }}</td>
+            <th>Cantidad de Cuajo</th>
+            <td>{{ isset($produccion->cantidad_cuajo) ? number_format($produccion->cantidad_cuajo, 2) . ' ml / g' : 'No especificado' }}</td>
         </tr>
         <tr>
             <th>Temperatura Objetivo</th>
@@ -146,7 +150,7 @@
             <th>Fecha de Inicio</th>
             <td>{{ $produccion->fecha_inicio ? $produccion->fecha_inicio->format('d/m/Y H:i:s') : '-' }}</td>
             <th>Fecha de Cierre</th>
-            <td>{{ $produccion->fecha_fin ? $produccion->fecha_fin->format('d/m/Y H:i:s') : 'En Proceso / Activo' }}</td>
+            <td>{{ $produccion->fecha_fin ? $produccion->fecha_fin->format('d/m/Y H:i:s') : 'En Proceso' }}</td>
         </tr>
         <tr>
             <th>Duración del Proceso</th>
@@ -158,27 +162,27 @@
     <table>
         <tr>
             <th>Temperatura Inicial</th>
-            <td>{{ $temperaturaInicial ? number_format($temperaturaInicial, 2) . ' °C' : '0.00 °C' }}</td>
+            <td>{{ isset($temperaturaInicial) ? number_format($temperaturaInicial, 2) . ' °C' : '0.00 °C' }}</td>
             <th>Temperatura Final</th>
-            <td>{{ $temperaturaFinal ? number_format($temperaturaFinal, 2) . ' °C' : '0.00 °C' }}</td>
+            <td>{{ isset($temperaturaFinal) ? number_format($temperaturaFinal, 2) . ' °C' : '0.00 °C' }}</td>
         </tr>
         <tr>
             <th>Temperatura Mínima</th>
-            <td><strong style="color: #198754;">{{ $temperaturaMinima ? number_format($temperaturaMinima, 2) . ' °C' : '0.00 °C' }}</strong></td>
+            <td><strong style="color: #198754;">{{ isset($temperaturaMinima) ? number_format($temperaturaMinima, 2) . ' °C' : '0.00 °C' }}</strong></td>
             <th>Temperatura Máxima</th>
-            <td><strong style="color: #dc3545;">{{ $temperaturaMaxima ? number_format($temperaturaMaxima, 2) . ' °C' : '0.00 °C' }}</strong></td>
+            <td><strong style="color: #dc3545;">{{ isset($temperaturaMaxima) ? number_format($temperaturaMaxima, 2) . ' °C' : '0.00 °C' }}</strong></td>
         </tr>
         <tr>
             <th>Temperatura Promedio</th>
-            <td><strong style="color: #0d6efd;">{{ $temperaturaPromedio ? number_format($temperaturaPromedio, 2) . ' °C' : '0.00 °C' }}</strong></td>
+            <td><strong style="color: #0d6efd;">{{ isset($temperaturaPromedio) ? number_format($temperaturaPromedio, 2) . ' °C' : '0.00 °C' }}</strong></td>
             <th>Total de Lecturas de Sensor</th>
-            <td>{{ $totalLecturas }} registros</td>
+            <td>{{ $totalLecturas ?? 0 }} registros</td>
         </tr>
     </table>
 
-    <div style="margin-top: 10px; margin-bottom: 20px; padding: 10px; border-radius: 4px; font-size: 11px; {{ $huboDesviaciones ? 'background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7;' : 'background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;' }}">
+    <div style="margin-top: 10px; margin-bottom: 20px; padding: 10px; border-radius: 4px; font-size: 11px; {{ isset($huboDesviaciones) && $huboDesviaciones ? 'background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7;' : 'background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;' }}">
         <strong>Estado de Monitoreo Térmico:</strong><br>
-        {{ $huboDesviaciones ? 'Se detectaron desviaciones de temperatura fuera del rango de tolerancia establecido durante el proceso.' : 'Temperatura mantenida exitosamente dentro del rango de tolerancia establecido.' }}
+        {{ isset($huboDesviaciones) && $huboDesviaciones ? 'Se detectaron desviaciones de temperatura fuera del rango de tolerancia establecido durante el proceso.' : 'Temperatura mantenida exitosamente dentro del rango de tolerancia establecido.' }}
     </div>
 
     <div class="section-title">Alertas Registradas en el Proceso</div>
@@ -207,6 +211,43 @@
         </table>
     @else
         <p style="color: #198754; font-style: italic; margin-bottom: 15px;">✅ Excelente: No se registraron anomalías ni alertas de temperatura durante esta producción.</p>
+    @endif
+
+    <div class="section-title">Historial Cronológico de Eventos (Bitácora del Lote)</div>
+    @if($produccion->eventos->count())
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Fecha y Hora</th>
+                    <th style="width: 20%;">Elemento / Acción</th>
+                    <th style="width: 55%;">Descripción del Evento</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($produccion->eventos as $evento)
+                <tr>
+                    <td style="color: #6c757d;">
+                        {{ $evento->fecha_hora->format('d/m/Y H:i:s') }}
+                    </td>
+                    <td>
+                        @php
+                            $badgeClass = match($evento->tipo) {
+                                'Producción' => 'badge-info',
+                                'Motor'      => 'badge-primary',
+                                'Ventilador' => 'badge-success',
+                                'Alerta'     => 'badge-danger',
+                                default      => 'badge-secondary'
+                            };
+                        @endphp
+                        <span class="badge {{ $badgeClass }}">{{ $evento->tipo }}</span>
+                    </td>
+                    <td><strong>{{ $evento->descripcion }}</strong></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p style="color: #6c757d; font-style: italic; margin-bottom: 15px;">No se encontraron eventos registrados para este lote.</p>
     @endif
 
 </body>

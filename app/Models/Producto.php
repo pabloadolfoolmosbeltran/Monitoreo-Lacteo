@@ -17,22 +17,31 @@ class Producto extends Model
         'descripcion',
         'temperatura_minima',
         'temperatura_maxima',
-        'temperatura_pasteurizacion', // <--- NUEVO
+        'temperatura_pasteurizacion',
+        'tipo_cuajo',
+        'cuajo_por_litro',
+        'unidad_cuajo',
+        'stock_cuajo',
+        'imagen_referencial',
         'activo'
     ];
 
-    // Esto asegura que Laravel siempre vea estos campos como números
     protected $casts = [
         'temperatura_minima' => 'float',
         'temperatura_maxima' => 'float',
         'temperatura_pasteurizacion' => 'float',
+        'cuajo_por_litro' => 'float',
+        'stock_cuajo' => 'float',
+        'activo' => 'boolean',
     ];
 
-    /**
-     * Un producto tiene muchas producciones
-     */
     public function producciones(): HasMany
     {
         return $this->hasMany(Produccion::class);
+    }
+
+    public function presentaciones(): HasMany
+    {
+        return $this->hasMany(Presentacion::class);
     }
 }

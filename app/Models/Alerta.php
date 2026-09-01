@@ -24,17 +24,11 @@ class Alerta extends Model
         'atendida' => 'boolean'
     ];
 
-    /**
-     * La alerta pertenece a una producción.
-     */
     public function produccion(): BelongsTo
     {
         return $this->belongsTo(Produccion::class);
     }
 
-    /**
-     * La alerta pertenece a una lectura.
-     */
     public function lectura(): BelongsTo
     {
         return $this->belongsTo(Lectura::class);

@@ -29,7 +29,7 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
     {
         return Produccion::with(['user', 'producto'])->orderByDesc('id')->get()->map(function ($produccion) {
             
-            // Calculamos la duración de forma idéntica a tus reportes
+            // Calculamos la duración de forma idéntica a los reportes
             $duracion = 'N/A';
             if ($produccion->fecha_inicio) {
                 $fin = $produccion->fecha_fin ?? now();
@@ -49,14 +49,44 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
             // Total de lecturas con fallback seguro
             $totalLecturas = $produccion->total_lecturas ?? $produccion->lecturas()->count();
 
+            // Mapeo del tipo de cuajo (Formato legible)
+            $tipoCuajo = match($produccion->tipo_cuajo) {
+                'liquido' => 'Líquido',
+                'polvo'   => 'En Polvo',
+                'pastilla'=> 'Pastilla',
+                default   => $produccion->tipo_cuajo ?? 'N/A'
+            };
+
+            // Unidad de medida según el tipo de cuajo
+            $unidadCuajo = match($produccion->tipo_cuajo) {
+                'liquido' => 'mL',
+                'polvo'   => 'g',
+                'pastilla'=> 'pastilla(s)',
+                default   => 'unid.'
+            };
+
+            // Formateo de cantidades de cuajo
+            $cantidadCuajo = $produccion->cantidad_cuajo 
+                ? number_format($produccion->cantidad_cuajo, 2) . ' ' . $unidadCuajo 
+                : 'N/A';
+                
+            $cuajoRecomendado = $produccion->cuajo_recomendado 
+                ? number_format($produccion->cuajo_recomendado, 2) . ' ' . $unidadCuajo 
+                : 'N/A';
+
             return [
                 '#' . $produccion->id,
                 $produccion->user?->name ?? 'N/A',
                 $produccion->user?->rol ?? 'N/A',
                 $produccion->user?->nombre_unidad_productiva ?? 'N/A',
                 $produccion->producto?->nombre ?? 'N/A',
-                $produccion->cantidad_leche ? $produccion->cantidad_leche . ' L' : '0 L',
+                $produccion->cantidad_leche ? number_format($produccion->cantidad_leche, 2) . ' L' : '0 L',
+                $tipoCuajo,
+                $cantidadCuajo,
+                $cuajoRecomendado,
                 number_format($produccion->temperatura_inicial ?? 0, 2) . ' °C',
+                number_format($produccion->temperatura_minima ?? 0, 2) . ' °C',
+                number_format($produccion->temperatura_maxima ?? 0, 2) . ' °C',
                 number_format($produccion->temperatura_final ?? 0, 2) . ' °C',
                 number_format($produccion->temperatura_promedio ?? 0, 2) . ' °C',
                 number_format($produccion->temperatura_objetivo ?? 0, 2) . ' °C',
@@ -78,7 +108,12 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Unidad Productiva',
             'Producto',
             'Cantidad Leche',
+            'Tipo Cuajo',
+            'Cuajo Utilizado',
+            'Cuajo Recomendado',
             'Temp. Inicial',
+            'Temp. Mínima',
+            'Temp. Máxima',
             'Temp. Final',
             'Temp. Promedio',
             'Temp. Objetivo',
@@ -89,13 +124,14 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Total Lecturas'
         ];
     }
+
     /**
      * Estilos visuales de la hoja de cálculo
      */
     public function styles(Worksheet $sheet)
     {
-        // 1. Aplicar estilo elegante al encabezado (Fila 1)
-        $sheet->getStyle('A1:O1')->applyFromArray([
+        // 1. Aplicar estilo elegante al encabezado (Fila 1, de A a T)
+        $sheet->getStyle('A1:T1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -103,7 +139,7 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '198754'], // Verde Bootstrap elegante
+                'startColor' => ['rgb' => '198754'], // Verde Bootstrap
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -117,9 +153,11 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
         // 2. Centrar columnas de datos técnicos y fechas para mejorar la legibilidad
         $totalFilas = $sheet->getHighestRow();
         if ($totalFilas > 1) {
-            // Centramos ID, Cantidad, Temperaturas, Estado, Fechas y Duración
+            // Centramos ID (Columna A)
             $sheet->getStyle('A2:A' . $totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyle('F2:O' . $totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            
+            // Centramos desde Cantidad Leche hasta Total Lecturas (Columnas F a T)
+            $sheet->getStyle('F2:T' . $totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
 
         return [];

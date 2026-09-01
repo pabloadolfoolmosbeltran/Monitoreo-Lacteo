@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Actuador;
 use App\Models\Sensor;
 use App\Models\Produccion;
-use App\Services\EventoService; // Importamos únicamente el servicio de eventos
-use Illuminate\Http\Request; // <--- NUEVO: Importar Request para capturar el switch
+use App\Services\EventoService;
+use Illuminate\Http\Request;
 
 class ControlController extends Controller
 {
@@ -16,11 +16,7 @@ class ControlController extends Controller
         $ventilador = Actuador::where('tipo', 'Ventilador')->first();
         $sensor = Sensor::first();
 
-        return view('control.index', compact(
-            'motor',
-            'ventilador',
-            'sensor'
-        ));
+        return view('control.index', compact('motor', 'ventilador', 'sensor'));
     }
 
     public function motor($estado)
@@ -32,11 +28,6 @@ class ControlController extends Controller
             $motor->modo = 'Manual';
             $motor->save();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Registrar evento del motor
-            |--------------------------------------------------------------------------
-            */
             $produccion = Produccion::where('estado', 'En proceso')->first();
 
             EventoService::registrar(
@@ -61,11 +52,6 @@ class ControlController extends Controller
             $ventilador->modo = 'Manual';
             $ventilador->save();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Registrar evento del ventilador
-            |--------------------------------------------------------------------------
-            */
             $produccion = Produccion::where('estado', 'En proceso')->first();
 
             EventoService::registrar(
@@ -89,11 +75,6 @@ class ControlController extends Controller
             $sensor->estado = ($estado == 'on') ? 'Activo' : 'Inactivo';
             $sensor->save();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Registrar evento del sensor
-            |--------------------------------------------------------------------------
-            */
             $produccion = Produccion::where('estado', 'En proceso')->first();
 
             EventoService::registrar(
@@ -108,20 +89,15 @@ class ControlController extends Controller
         return redirect('/control')
             ->with('success', 'Sensor actualizado correctamente.');
     }
+
     public function cambiarModo(Request $request, $tipo)
     {
         $actuador = Actuador::where('tipo', $tipo)->first();
 
         if ($actuador) {
-            // Guardamos 'Automatico' (sin tilde) si el switch está marcado, sino 'Manual'
             $actuador->modo = $request->has('modo') ? 'Automatico' : 'Manual';
             $actuador->save();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Registrar el cambio en la bitácora
-            |--------------------------------------------------------------------------
-            */
             $produccion = Produccion::where('estado', 'En proceso')->first();
 
             EventoService::registrar(

@@ -8,62 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #f0f4f8, #d9e8f5);
-            min-height: 100vh;
-        }
-
-        .login-card {
-            border: none;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        }
-
-        .login-header {
-            background: linear-gradient(135deg, #0F6E56, #0C447C);
-            padding: 1.75rem 1.5rem;
-        }
-
-        .login-header h4 {
-            font-weight: 600;
-            font-size: 1.15rem;
-        }
-
-        .login-header i {
-            font-size: 1.6rem;
-            opacity: 0.9;
-        }
-
-        .input-icon-wrap {
-            position: relative;
-        }
-
-        .input-icon-wrap i {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-        }
-
-        .input-icon-wrap input {
-            padding-left: 38px;
-        }
-
-        .btn-login {
-            background: #0F6E56;
-            border: none;
-            font-weight: 600;
-            padding: 10px;
-            transition: background 0.2s;
-        }
-
-        .btn-login:hover {
-            background: #0c5745;
-        }
-    </style>
+    @vite(['resources/css/login.css', 'resources/js/app.js'])
 </head>
 <body>
 <div class="container">
@@ -103,9 +48,15 @@
                             </div>
                         @endif
 
-                        <button class="btn btn-login text-white w-100">
+                        <button class="btn btn-login text-white w-100 mb-2">
                             Iniciar Sesión <i class="bi bi-arrow-right ms-1"></i>
                         </button>
+
+                        <!-- Botón para volver al catálogo -->
+                        <a href="http://127.0.0.1:8000/catalogo" class="btn btn-outline-catalog w-100 text-center text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i> Volver al Catálogo
+                        </a>
+                        
                     </form>
                 </div>
 

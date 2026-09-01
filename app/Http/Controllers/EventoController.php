@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evento;
-use Illuminate\Http\Request; // <--- Importante para capturar los filtros de la URL
+use Illuminate\Http\Request;
 
 class EventoController extends Controller
 {
-    /**
-     * Mostrar la bitácora del sistema con filtros de tipo y fecha.
-     */
     public function index(Request $request)
     {
         $eventos = Evento::with(['produccion', 'user'])

@@ -1,11 +1,242 @@
-@import 'tailwindcss';
-@vite(['resources/css/app.css', 'resources/js/app.js'])
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* ============================================================
+   APP.CSS - Estilos globales del panel de control
+   ============================================================ */
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+/* --- Layout general (layouts/app) --- */
+:root {
+    --sidebar-bg: #1e293b; /* Azul pizarra muy oscuro */
+    --sidebar-hover: #334155;
+    --accent-blue: #0ea5e9; /* Azul frío (enfriador) */
+    --bg-body: #f4f6f9; /* Gris muy claro, aspecto limpio */
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Estilos del Menú Lateral (Sidebar) */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    min-height: 100vh;
+    color: #cbd5e1;
+    padding-top: 1rem;
+}
+
+.sidebar-heading {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #64748b;
+    font-weight: 700;
+    padding: 0 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar .nav-link {
+    color: #cbd5e1;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    margin: 0.2rem 0.75rem;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.9rem;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--sidebar-hover);
+    color: #fff;
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--sidebar-hover);
+    color: #fff;
+    border-left: 4px solid var(--accent-blue);
+    padding-left: calc(1rem - 4px); /* Mantiene la alineación */
+    font-weight: 600;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    display: inline-block;
+    text-align: center;
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
+/* Barra de Navegación Superior */
+.navbar-custom {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Contenedor Principal */
+.main-content {
+    padding: 2rem;
+}
+
+/* --- Sidebar específico (partials/sidebar): Turquesa Oscuro Industrial / HMI --- */
+.sidebar-container {
+    background-color: #112224; /* Turquesa oscuro / Petrol industrial profundo */
+    color: #b2dfdb;
+    min-height: 100vh;
+    border-right: 1px solid #1a383b;
+    padding: 1.25rem 0.75rem;
+}
+
+.sidebar-container .sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #80cbc4; /* Turquesa suave para títulos */
+    padding: 0.75rem 0.75rem 0.35rem 0.75rem;
+    font-weight: 700;
+    margin-top: 1rem;
+}
+
+.sidebar-container .nav-link {
+    color: #b0bec5;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.sidebar-container .nav-link i {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    color: #80cbc4;
+}
+
+.sidebar-container .nav-link:hover {
+    background-color: rgba(0, 128, 128, 0.25);
+    color: #ffffff;
+}
+
+.sidebar-container .nav-link:hover i {
+    color: #ffffff;
+}
+
+.sidebar-container .nav-link.active {
+    background-color: #008080; /* Turquesa primario de la aplicación */
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 128, 128, 0.3);
+}
+
+.sidebar-container .nav-link.active i {
+    color: #ffffff;
+}
+
+/* ============================================================
+   BOTONES UNIFORMES - Paleta verde celeste
+   Se aplica a todas las vistas del panel (layouts/app)
+   ============================================================ */
+:root {
+    --tc-primary: #008080;       /* verde celeste / turquesa primario */
+    --tc-primary-hover: #006666;
+    --tc-success: #00897b;
+    --tc-success-hover: #00695c;
+    --tc-light: #e0f2f1;
+    --tc-border: #b2dfdb;
+    --tc-dark: #134e4a;
+}
+
+/* Botón primario: verde celeste */
+.btn-primary {
+    background-color: var(--tc-primary) !important;
+    border-color: var(--tc-primary) !important;
+    color: #ffffff !important;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--tc-primary-hover) !important;
+    border-color: var(--tc-primary-hover) !important;
+    color: #ffffff !important;
+}
+
+/* Botón de éxito / crear / guardar */
+.btn-success {
+    background-color: var(--tc-success) !important;
+    border-color: var(--tc-success) !important;
+    color: #ffffff !important;
+}
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: var(--tc-success-hover) !important;
+    border-color: var(--tc-success-hover) !important;
+    color: #ffffff !important;
+}
+
+/* Botón secundario: claro con borde verde celeste */
+.btn-secondary {
+    background-color: var(--tc-light) !important;
+    border-color: var(--tc-border) !important;
+    color: var(--tc-primary) !important;
+}
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    background-color: var(--tc-border) !important;
+    border-color: var(--tc-primary) !important;
+    color: var(--tc-primary-hover) !important;
+}
+
+/* Botón info / detalle */
+.btn-info {
+    background-color: var(--tc-light) !important;
+    border-color: var(--tc-border) !important;
+    color: var(--tc-primary) !important;
+}
+
+/* Botón de edición: amarillo con tono verde celeste */
+.btn-warning {
+    background-color: #c9e9a0 !important;
+    border-color: #b2dfdb !important;
+    color: #134e4a !important;
+}
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active {
+    background-color: #b2dfdb !important;
+    border-color: var(--tc-primary) !important;
+    color: #134e4a !important;
+}
+
+/* Botón de eliminación: rojo que respeta lo funcional (mantener perceptible) */
+.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #c82333 !important;
+    color: #ffffff !important;
+}
+
+/* Botón oscuro: verde celeste profundo */
+.btn-dark {
+    background-color: var(--tc-dark) !important;
+    border-color: var(--tc-dark) !important;
+    color: #ffffff !important;
+}
+.btn-dark:hover,
+.btn-dark:focus,
+.btn-dark:active {
+    background-color: var(--tc-primary-hover) !important;
+    border-color: var(--tc-primary-hover) !important;
+}
+
+/* Botón contorno primary */
+.btn-outline-primary {
+    border-color: var(--tc-primary) !important;
+    color: var(--tc-primary) !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--tc-primary) !important;
+    color: #ffffff !important;
 }

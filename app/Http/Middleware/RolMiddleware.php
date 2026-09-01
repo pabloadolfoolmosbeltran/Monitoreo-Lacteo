@@ -14,7 +14,7 @@ class RolMiddleware
     public function handle(
         Request $request,
         Closure $next,
-        string $rol
+        string ...$roles
     ): Response
     {
         $usuario = auth()->user();
@@ -23,8 +23,7 @@ class RolMiddleware
             return redirect()->route('login');
         }
 
-        // 🛡️ Validamos el rol directamente sobre el atributo de la tabla users unificada
-        if ($usuario->rol != $rol) {
+        if (!in_array($usuario->rol, $roles)) {
             abort(403);
         }
 

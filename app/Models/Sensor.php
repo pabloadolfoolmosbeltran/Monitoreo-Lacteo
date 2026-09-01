@@ -23,17 +23,11 @@ class Sensor extends Model
         'temperatura_actual'
     ];
 
-    /**
-     * El sensor pertenece a un dispositivo.
-     */
     public function dispositivo(): BelongsTo
     {
         return $this->belongsTo(Dispositivo::class);
     }
 
-    /**
-     * El sensor tiene muchas lecturas.
-     */
     public function lecturas(): HasMany
     {
         return $this->hasMany(Lectura::class);

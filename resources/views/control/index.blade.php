@@ -3,7 +3,6 @@
 @section('content')
 
 <style>
-    /* Paleta Temática: Turquesa Lechero / HMI Industrial Fresco */
     :root {
         --milk-bg: #f4fbfb;
         --card-bg: #ffffff;
@@ -279,7 +278,6 @@
                         @endif
                     </div>
 
-                    <!-- Espaciador para igualar alturas con las tarjetas anteriores -->
                     <div class="p-3 mb-4 d-none d-md-block" style="height: 56px;"></div>
 
                     <div class="d-flex gap-2 mt-auto">

@@ -1,107 +1,10 @@
 @extends('layouts.app')
 
+@push('styles')
+@vite(['resources/css/produccion.css'])
+@endpush
+
 @section('content')
-
-<style>
-    /* Paleta Temática: Turquesa Lechero / Industrial Fresco */
-    :root {
-        --milk-bg: #f4fbfb;
-        --card-bg: #ffffff;
-        --turquoise-primary: #008080; /* Turquesa profesional profundo */
-        --turquoise-light: #e0f2f1;   /* Aqua suave / Leche fresca */
-        --turquoise-hover: #006666;
-        --text-main: #2b3a42;
-        --text-muted: #5c768d;
-        --border-soft: #b2dfdb;
-    }
-
-    .dairy-production-container {
-        font-family: system-ui, -apple-system, sans-serif;
-        color: var(--text-main);
-        padding-bottom: 3rem;
-    }
-
-    .dairy-card {
-        border: 1px solid var(--border-soft);
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.05);
-        background: var(--card-bg);
-        overflow: hidden;
-        margin-bottom: 1.5rem;
-    }
-
-    .dairy-card-header {
-        background-color: var(--turquoise-light);
-        color: var(--turquoise-primary);
-        border-bottom: 1px solid var(--border-soft);
-        padding: 1rem 1.25rem;
-        font-weight: 700;
-    }
-
-    .dairy-card-header-active {
-        background-color: var(--turquoise-primary);
-        color: #ffffff;
-        border-bottom: 1px solid var(--turquoise-hover);
-        padding: 1.05rem 1.25rem;
-        font-weight: 700;
-    }
-
-    .form-control, .form-select {
-        border: 1px solid var(--border-soft);
-        border-radius: 8px;
-        padding: 0.6rem 0.9rem;
-        font-size: 0.95rem;
-        color: var(--text-main);
-        background-color: #fff;
-    }
-
-    .form-control:focus, .form-select:focus {
-        border-color: var(--turquoise-primary);
-        box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
-    }
-
-    .btn-industrial {
-        border-radius: 10px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        padding: 0.6rem 1.2rem;
-        text-transform: uppercase;
-        font-size: 0.85rem;
-        transition: all 0.2s ease;
-    }
-
-    .btn-industrial-success {
-        background-color: var(--turquoise-primary);
-        color: #fff;
-        border: none;
-    }
-    .btn-industrial-success:hover {
-        background-color: var(--turquoise-hover);
-        color: #fff;
-    }
-
-    .btn-industrial-danger {
-        background-color: #ffffff;
-        color: #e11d48;
-        border: 1px solid #fecaca;
-    }
-    .btn-industrial-danger:hover {
-        background-color: #fff1f2;
-        color: #be123c;
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.4rem 1rem;
-        border-radius: 50px;
-        font-weight: 600;
-        font-size: 0.85rem;
-        background-color: var(--turquoise-light);
-        color: var(--turquoise-hover);
-        border: 1px solid var(--border-soft);
-    }
-</style>
 
 <div class="container dairy-production-container pt-3">
     <h2 class="mb-4 fw-bold" style="color: var(--turquoise-primary);">
@@ -131,6 +34,13 @@
     @endif
 
     @if($produccionActiva)
+    @php
+        $factorCuajo = (float)($produccionActiva->producto->cuajo_por_litro ?? 0);
+        $totalCuajoCalculado = $produccionActiva->cantidad_leche * $factorCuajo;
+        $unidadCuajo = $produccionActiva->producto->unidad_cuajo ?? 'ml';
+        $tipoCuajo = $produccionActiva->producto->tipo_cuajo ?? 'Insumo/Cuajo';
+    @endphp
+
     <div class="dairy-card">
         <div class="dairy-card-header-active d-flex align-items-center">
             <i class="bi bi-activity me-2 fs-5"></i>
@@ -171,6 +81,31 @@
                 </div>
             </div>
 
+            <!-- DETALLE DE INSUMO/CUAJO UTILIZADO -->
+            <div class="mt-3 p-3 rounded-3 border shadow-sm" style="background-color: var(--milk-bg); border-color: var(--border-soft) !important;">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-center">
+                        <i class="bi bi-droplet-half fs-2" style="color: var(--turquoise-primary);"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <span class="d-block text-uppercase fw-semibold" style="color: var(--text-muted); font-size: 0.75rem;">
+                            Insumo / Cuajo Aplicado y Descontado:
+                        </span>
+                        <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                            <span class="fw-bold fs-4 text-dark">
+                                {{ number_format($totalCuajoCalculado, 2) }} {{ $unidadCuajo }}
+                            </span>
+                            <span class="badge rounded-pill" style="background-color: var(--turquoise-light); color: var(--turquoise-primary); border: 1px solid var(--border-soft); font-size: 0.8rem;">
+                                {{ $tipoCuajo }}
+                            </span>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            Dosis configurada: <strong>{{ $factorCuajo }} {{ $unidadCuajo }}/L</strong> para <strong>{{ $produccionActiva->cantidad_leche }} L</strong> en tina.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
             @if($produccionActiva->observaciones)
             <hr style="border-color: var(--border-soft);">
             <p class="mb-0">
@@ -198,6 +133,11 @@
         <div class="card-body p-4">
             <form action="{{ url('/produccion/iniciar') }}" method="POST">
                 @csrf
+
+                <!-- Campos ocultos para enviar tipo y cantidad de cuajo calculados -->
+                <input type="hidden" name="tipo_cuajo" id="input-hidden-tipo-cuajo" value="">
+                <input type="hidden" name="cantidad_cuajo" id="input-hidden-cantidad-cuajo" value="">
+                
                 <div class="mb-3">
                     <label class="form-label fw-semibold" style="color: var(--text-muted);">
                         Productor responsable
@@ -230,7 +170,7 @@
                     <label class="form-label fw-semibold" style="color: var(--text-muted);">
                         Producto
                     </label>
-                    <select name="producto_id" class="form-select shadow-sm" required>
+                    <select name="producto_id" id="select-producto" class="form-select shadow-sm" required>
                         <option value="">Seleccione un producto</option>
                         @foreach($productos as $producto)
                         <option
@@ -251,7 +191,9 @@
                         step="0.01"
                         min="1"
                         name="cantidad_leche"
+                        id="input-cantidad-leche"
                         class="form-control shadow-sm"
+                        placeholder="Ej: 100"
                         value="{{ old('cantidad_leche') }}"
                         required>
                 </div>
@@ -265,9 +207,71 @@
                         step="0.1"
                         min="1"
                         name="temperatura_objetivo"
+                        id="input-temperatura-objetivo"
                         class="form-control shadow-sm"
+                        placeholder="Ej: 38.0"
                         value="{{ old('temperatura_objetivo') }}"
                         required>
+                    <small id="temp-sugerida-help" class="form-text text-muted mt-1" style="display: none;"></small>
+                </div>
+
+                <!-- CÁLCULO DINÁMICO E INFORMACIÓN DEL PRODUCTO -->
+                <div id="info-lote-dinamico" style="display: none;" class="mb-4 p-3 border rounded-3 shadow-sm" style="background-color: var(--milk-bg); border-color: var(--border-soft);">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center mb-3 mb-md-0">
+                            <img id="img-producto-referencial" src="" alt="Referencia" class="img-fluid rounded shadow-sm" style="max-height: 130px; object-fit: cover;">
+                        </div>
+                        <div class="col-md-9">
+                            <h5 id="nombre-lote" class="fw-bold mb-2" style="color: var(--turquoise-primary);"></h5>
+                            
+                            <!-- Alerta dinámica de instrucciones -->
+                            <div id="alerta-producto" class="alert alert-info py-2 mb-2 shadow-sm" style="display: none; font-size: 0.85rem; border: 1px solid #90caf9;">
+                                <i class="bi bi-info-circle-fill me-1"></i> <strong>Aviso Importante:</strong> <span id="texto-alerta"></span>
+                            </div>
+
+                            <!-- Alerta de Stock Insuficiente -->
+                            <div id="alerta-stock-insuficiente" class="alert alert-danger py-2 mb-2 shadow-sm" style="display: none; font-size: 0.85rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>¡Atención!</strong> El stock actual de cuajo es insuficiente para procesar esta cantidad de leche.
+                            </div>
+
+                            <div class="p-3 bg-white border rounded shadow-sm">
+                                <!-- Información Técnica y Térmica -->
+                                <div class="row text-muted small mb-2 border-bottom pb-2">
+                                    <div class="col-6 col-md-3">
+                                        <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Tipo Cuajo:</span>
+                                        <span id="tipo-cuajo-val" class="fw-bold text-dark fs-6">-</span>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Dosis Requerida:</span>
+                                        <span id="dosis-cuajo-val" class="fw-bold text-dark fs-6">-</span>
+                                    </div>
+                                    <div class="col-6 col-md-3 mt-2 mt-md-0">
+                                        <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Rango Temp:</span>
+                                        <span id="rango-temp-val" class="fw-bold text-dark fs-6">-</span>
+                                    </div>
+                                    <div class="col-6 col-md-3 mt-2 mt-md-0">
+                                        <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Stock Actual:</span>
+                                        <span id="stock-actual-val" class="fw-bold text-primary fs-6">0</span> <span class="unidad-cuajo-val fw-bold text-primary">ml</span>
+                                    </div>
+                                </div>
+
+                                <!-- Proyección de Consumo -->
+                                <div class="d-flex justify-content-between align-items-center flex-wrap pt-1">
+                                    <div>
+                                        <span class="text-muted d-block mb-1" style="font-size: 0.85rem;">Cuajo Total a Gastar:</span>
+                                        <h4 class="mb-0 text-dark">
+                                            <span id="resultado-cuajo" class="text-danger fw-bold">0</span> <span class="unidad-cuajo-val text-danger fw-bold">ml</span>
+                                        </h4>
+                                        <small class="text-muted">Para <span id="litros-ingresados" class="fw-semibold">0</span> litros en tina</small>
+                                    </div>
+                                    <div class="text-md-end mt-2 mt-md-0 bg-light p-2 rounded border">
+                                        <span class="text-muted d-block small fw-semibold">Stock Proyectado Tras Proceso:</span>
+                                        <span id="stock-restante-val" class="fw-bold fs-5 text-success">0</span> <span class="unidad-cuajo-val fw-bold text-success">ml</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -277,10 +281,10 @@
                     <textarea
                         name="observaciones"
                         class="form-control shadow-sm"
-                        rows="4">{{ old('observaciones') }}</textarea>
+                        rows="3">{{ old('observaciones') }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-industrial btn-industrial-success shadow-sm">
+                <button type="submit" id="btn-iniciar-produccion" class="btn btn-industrial btn-industrial-success shadow-sm">
                     Iniciar Producción
                 </button>
             </form>
@@ -290,4 +294,10 @@
 
 </div>
 
+@push('scripts')
+<script>
+    window.produccionData = @json($productos);
+</script>
+@vite(['resources/js/produccion.js'])
+@endpush
 @endsection

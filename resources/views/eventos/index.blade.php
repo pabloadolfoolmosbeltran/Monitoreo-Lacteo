@@ -2,7 +2,6 @@
 
 @section('content')
 <style>
-    /* Paleta Temática: Turquesa Lechero / Fresco & Limpio */
     :root {
         --milk-bg: #f4fbfb;
         --card-bg: #ffffff;

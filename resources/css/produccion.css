@@ -1,0 +1,101 @@
+/* ============================================================
+   PRODUCCION.CSS - Estilos de producción
+   ============================================================ */
+
+:root {
+    --milk-bg: #f4fbfb;
+    --card-bg: #ffffff;
+    --turquoise-primary: #008080;
+    --turquoise-light: #e0f2f1;
+    --turquoise-hover: #006666;
+    --text-main: #2b3a42;
+    --text-muted: #5c768d;
+    --border-soft: #b2dfdb;
+}
+
+.dairy-production-container {
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--text-main);
+    padding-bottom: 3rem;
+}
+
+.dairy-card {
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 128, 128, 0.05);
+    background: var(--card-bg);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.dairy-card-header {
+    background-color: var(--turquoise-light);
+    color: var(--turquoise-primary);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 1rem 1.25rem;
+    font-weight: 700;
+}
+
+.dairy-card-header-active {
+    background-color: var(--turquoise-primary);
+    color: #ffffff;
+    border-bottom: 1px solid var(--turquoise-hover);
+    padding: 1.05rem 1.25rem;
+    font-weight: 700;
+}
+
+.form-control, .form-select {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: #fff;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--turquoise-primary);
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15);
+}
+
+.btn-industrial {
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 0.6rem 1.2rem;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+.btn-industrial-success {
+    background-color: var(--turquoise-primary);
+    color: #fff;
+    border: none;
+}
+.btn-industrial-success:hover {
+    background-color: var(--turquoise-hover);
+    color: #fff;
+}
+
+.btn-industrial-danger {
+    background-color: #ffffff;
+    color: #e11d48;
+    border: 1px solid #fecaca;
+}
+.btn-industrial-danger:hover {
+    background-color: #fff1f2;
+    color: #be123c;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    background-color: var(--turquoise-light);
+    color: var(--turquoise-hover);
+    border: 1px solid var(--border-soft);
+}

@@ -9,15 +9,10 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    /**
-     * Mostrar listado de usuarios con soporte de búsqueda.
-     */
     public function index(Request $request)
     {
-        // 1. Iniciamos la consulta directamente sobre el modelo User unificado
-        $consulta = User::query();
+        $consulta = User::where('activo', true);
 
-        // 2. Si el usuario escribió algo en el buscador, filtramos
         if ($request->filled('buscar')) {
             $consulta->where(function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->buscar . '%')
@@ -26,26 +21,18 @@ class UserController extends Controller
             });
         }
 
-        // 3. Ordenamos por nombre, paginamos de 10 en 10 y mantenemos los filtros en la URL
         $usuarios = $consulta->orderBy('name')
                              ->paginate(10)
                              ->withQueryString();
 
-        // 4. Retornamos la vista con los datos compactados
         return view('usuarios.index', compact('usuarios'));
     }
 
-    /**
-     * Mostrar formulario para crear un usuario.
-     */
     public function create()
     {
         return view('usuarios.create');
     }
 
-    /**
-     * Guardar un nuevo usuario.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -66,38 +53,17 @@ class UserController extends Controller
             'direccion' => $request->direccion,
             'nombre_unidad_productiva' => $request->nombre_unidad_productiva,
             'rol' => $request->rol,
+            'activo' => true,
         ]);
 
-        return redirect()
-            ->route('usuarios.index')
-            ->with(
-                'success',
-                'Usuario registrado correctamente.'
-            );
+        return redirect()->route('usuarios.index')->with('success', 'Usuario registrado correctamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Mostrar formulario para editar un usuario.
-     */
     public function edit(User $usuario)
     {
-        return view(
-            'usuarios.edit',
-            compact('usuario')
-        );
+        return view('usuarios.edit', compact('usuario'));
     }
 
-    /**
-     * Actualizar usuario.
-     */
     public function update(Request $request, User $usuario)
     {
         $request->validate([
@@ -119,44 +85,24 @@ class UserController extends Controller
         ];
 
         if ($request->filled('password')) {
-            $request->validate([
-                'password' => 'confirmed|min:8'
-            ]);
-
+            $request->validate(['password' => 'confirmed|min:8']);
             $data['password'] = Hash::make($request->password);
         }
 
         $usuario->update($data);
 
-        return redirect()
-            ->route('usuarios.index')
-            ->with(
-                'success',
-                'Usuario actualizado correctamente.'
-            );
+        return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
 
-    /**
-     * Eliminar usuario.
-     */
     public function destroy(User $usuario)
     {
         if (Auth::id() == $usuario->getKey()) {
-            return redirect()
-                ->route('usuarios.index')
-                ->with(
-                    'error',
-                    'No puede eliminar su propio usuario.'
-                );
+            return redirect()->route('usuarios.index')->with('error', 'No puede eliminar su propio usuario.');
         }
 
-        $usuario->delete();
+        // Eliminación lógica: no se borra el usuario ni su historial.
+        $usuario->update(['activo' => false]);
 
-        return redirect()
-            ->route('usuarios.index')
-            ->with(
-                'success',
-                'Usuario eliminado correctamente.'
-            );
+        return redirect()->route('usuarios.index')->with('success', 'Usuario desactivado correctamente.');
     }
 }
