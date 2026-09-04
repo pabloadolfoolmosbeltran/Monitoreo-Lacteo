@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const sinResultados =
         document.getElementById('sinResultados');
 
+    const resultadoConteo =
+        document.getElementById('resultadoConteo');
+
     const filtrosStock =
         Array.from(document.querySelectorAll('.filtro-stock'));
 
@@ -82,7 +85,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        sinResultados.classList.toggle('d-none', visibles > 0);
+        if (sinResultados) {
+            sinResultados.classList.toggle('d-none', visibles > 0);
+        }
+
+        if (resultadoConteo) {
+            resultadoConteo.textContent = visibles.toString();
+        }
     }
 
     buscador.addEventListener('input', aplicarFiltros);
@@ -145,6 +154,11 @@ document.addEventListener('DOMContentLoaded', function () {
         aplicarFiltros();
     }
 
-    limpiarFiltros.addEventListener('click', limpiarTodo);
-    limpiarFiltros2.addEventListener('click', limpiarTodo);
+    if (limpiarFiltros) {
+        limpiarFiltros.addEventListener('click', limpiarTodo);
+    }
+
+    if (limpiarFiltros2) {
+        limpiarFiltros2.addEventListener('click', limpiarTodo);
+    }
 });
