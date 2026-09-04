@@ -4,89 +4,115 @@
 
 @section('content')
 
-<div class="container py-5 catalogo-wrap">
+@php
+    $totalPresentaciones = $presentaciones->count();
+    $productosUnicos = $presentaciones->pluck('producto.nombre')->filter()->unique()->count();
+    $presentacionesDisponibles = $presentaciones->filter(function ($presentacion) {
+        return (float) $presentacion->stock > 0;
+    })->count();
+@endphp
 
-    {{-- ============================================================
-         ENCABEZADO
-    ============================================================= --}}
-    <section class="pil-hero p-4 p-md-5 mb-5">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-8">
-                <p class="text-uppercase small fw-bold eyebrow mb-2">
-                    Directo de productores locales
-                </p>
+<div class="catalogo-page">
 
-                <h1 class="display-6 mb-3">
-                    Productos lácteos disponibles
-                </h1>
+    <section class="catalog-hero">
+        <div class="container">
+            <div class="catalog-hero__grid">
+                <div class="catalog-hero__copy">
+                    <span class="catalog-hero__kicker">
+                        <i class="bi bi-droplet-half"></i>
+                        Directo de productores locales
+                    </span>
 
-                <p class="mb-0" style="color:#DDEFE3;">
-                    Explora sabores, presentaciones y tamaños. Toca cada tarjeta
-                    para ver el detalle completo.
-                </p>
-            </div>
+                    <h1>Productos lácteos disponibles</h1>
 
-            <div class="col-lg-4 text-lg-end text-center">
-                <i class="bi bi-basket2-fill" style="font-size: 4.5rem; opacity:.9;"></i>
+                    <p>
+                        Catálogo público con presentaciones, precios y disponibilidad
+                        actualizada para elegir productos frescos con confianza.
+                    </p>
+
+                    <div class="catalog-hero__actions">
+                        <a href="#catalogoResultados" class="btn btn-light catalog-hero__button">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                            Ver catálogo
+                        </a>
+                        <a href="{{ route('catalogo.contacto') }}" class="btn btn-outline-light catalog-hero__button">
+                            <i class="bi bi-telephone"></i>
+                            Contacto
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="catalog-hero__panel" aria-label="Resumen del catálogo">
+                    <div class="catalog-hero__panel-head">
+                        <span>Resumen disponible</span>
+                        <i class="bi bi-basket2-fill"></i>
+                    </div>
+
+                    <div class="catalog-hero__stats">
+                        <div>
+                            <strong>{{ $totalPresentaciones }}</strong>
+                            <span>{{ $totalPresentaciones === 1 ? 'presentación' : 'presentaciones' }}</span>
+                        </div>
+                        <div>
+                            <strong>{{ $productosUnicos }}</strong>
+                            <span>{{ $productosUnicos === 1 ? 'producto base' : 'productos base' }}</span>
+                        </div>
+                        <div>
+                            <strong>{{ $presentacionesDisponibles }}</strong>
+                            <span>con stock</span>
+                        </div>
+                    </div>
+
+                    <div class="catalog-hero__note">
+                        <i class="bi bi-check2-circle"></i>
+                        Información comercial clara para visitantes externos.
+                    </div>
+                </aside>
             </div>
         </div>
     </section>
 
+    <div class="container catalogo-wrap py-5">
 
-    {{-- ============================================================
-         ENCABEZADO DEL CATÁLOGO
-    ============================================================= --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="h4 fw-bold mb-1">
-                Catálogo de productos
-            </h2>
-            <p class="text-muted mb-0 small">
-                Encuentra rápidamente la presentación que buscas.
-            </p>
-        </div>
+        <section class="catalog-section-head" id="catalogoResultados">
+            <div>
+                <span class="catalog-section-head__label">Catálogo público</span>
+                <h2>Encuentra la presentación adecuada</h2>
+                <p>
+                    Filtra por producto, sabor, unidad o disponibilidad y revisa
+                    cada presentación sin perder el contexto del catálogo.
+                </p>
+            </div>
 
-        <span class="badge text-success border px-3 py-2">
-            {{ $presentaciones->count() }}
-            {{ $presentaciones->count() === 1 ? 'producto' : 'productos' }}
-        </span>
-    </div>
+            <div class="catalog-count-pill" aria-live="polite">
+                <i class="bi bi-box-seam"></i>
+                <span>
+                    <strong id="resultadoConteo">{{ $totalPresentaciones }}</strong>
+                    de {{ $totalPresentaciones }}
+                </span>
+            </div>
+        </section>
 
-
-    {{-- ============================================================
-         BUSCADOR Y FILTROS
-    ============================================================= --}}
-    <div class="card filtros-card shadow-sm mb-5">
-        <div class="card-body p-4">
-
-            <div class="row g-3">
-
-                {{-- BUSCADOR GENERAL --}}
-                <div class="col-lg-6">
-                    <label for="buscadorCatalogo" class="form-label fw-semibold small">
+        <section class="catalog-filter-panel mb-4" aria-label="Filtros del catálogo">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-5">
+                    <label for="buscadorCatalogo" class="form-label">
                         Buscar producto
                     </label>
 
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-success"></i>
-                        </span>
+                    <div class="catalog-search">
+                        <i class="bi bi-search"></i>
                         <input
                             type="search"
                             id="buscadorCatalogo"
-                            class="form-control border-start-0"
-                            placeholder="Ej.: yogurt, frutilla, 1 litro, botella..."
+                            class="form-control"
+                            placeholder="Yogurt, frutilla, 1 litro, botella..."
                         >
                     </div>
-
-                    <small class="text-muted">
-                        Busca por nombre, producto, sabor, envase, contenido o unidad.
-                    </small>
                 </div>
 
-                {{-- PRODUCTO --}}
-                <div class="col-md-4 col-lg-2">
-                    <label for="filtroProducto" class="form-label fw-semibold small">Producto</label>
+                <div class="col-md-4 col-lg-3">
+                    <label for="filtroProducto" class="form-label">Producto</label>
                     <select id="filtroProducto" class="form-select">
                         <option value="">Todos</option>
                         @foreach($presentaciones->pluck('producto.nombre')->filter()->unique()->sort() as $productoNombre)
@@ -95,9 +121,8 @@
                     </select>
                 </div>
 
-                {{-- SABOR --}}
                 <div class="col-md-4 col-lg-2">
-                    <label for="filtroSabor" class="form-label fw-semibold small">Sabor</label>
+                    <label for="filtroSabor" class="form-label">Sabor</label>
                     <select id="filtroSabor" class="form-select">
                         <option value="">Todos</option>
                         @foreach($presentaciones->pluck('sabor')->filter()->unique()->sort() as $sabor)
@@ -106,9 +131,8 @@
                     </select>
                 </div>
 
-                {{-- UNIDAD --}}
                 <div class="col-md-4 col-lg-2">
-                    <label for="filtroUnidad" class="form-label fw-semibold small">Presentación</label>
+                    <label for="filtroUnidad" class="form-label">Presentación</label>
                     <select id="filtroUnidad" class="form-select">
                         <option value="">Todas</option>
                         @foreach($presentaciones->pluck('unidad')->filter()->unique()->sort() as $unidad)
@@ -116,195 +140,249 @@
                         @endforeach
                     </select>
                 </div>
-
             </div>
 
-            {{-- CHIPS: DISPONIBILIDAD --}}
-            <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
-                <span class="small text-muted fw-semibold me-1">Disponibilidad:</span>
+            <div class="catalog-filter-strip">
+                <div class="catalog-chip-group" role="group" aria-label="Filtrar por disponibilidad">
+                    <span>Disponibilidad</span>
 
-                <button type="button" class="btn-chip filtro-stock active" data-stock="">
-                    Todos
-                </button>
-                <button type="button" class="btn-chip filtro-stock" data-stock="disponible">
-                    <i class="bi bi-check-circle me-1"></i>Disponibles
-                </button>
-                <button type="button" class="btn-chip filtro-stock" data-stock="agotado">
-                    <i class="bi bi-x-circle me-1"></i>Agotados
+                    <button type="button" class="btn-chip filtro-stock active" data-stock="">
+                        Todos
+                    </button>
+                    <button type="button" class="btn-chip filtro-stock" data-stock="disponible">
+                        <i class="bi bi-check-circle"></i>
+                        Disponibles
+                    </button>
+                    <button type="button" class="btn-chip filtro-stock" data-stock="agotado">
+                        <i class="bi bi-x-circle"></i>
+                        Agotados
+                    </button>
+                </div>
+
+                <div class="catalog-chip-group" role="group" aria-label="Filtrar por fruta">
+                    <span>Con fruta</span>
+
+                    <button type="button" class="btn-chip filtro-fruta active-fruta" data-fruta="">
+                        Todos
+                    </button>
+                    <button type="button" class="btn-chip filtro-fruta" data-fruta="si">
+                        <i class="bi bi-stars"></i>
+                        Con fruta
+                    </button>
+                    <button type="button" class="btn-chip filtro-fruta" data-fruta="no">
+                        <i class="bi bi-dash-circle"></i>
+                        Sin fruta
+                    </button>
+                </div>
+
+                <button type="button" id="limpiarFiltros" class="catalog-reset">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                    Limpiar filtros
                 </button>
             </div>
+        </section>
 
-            {{-- CHIPS: CON FRUTA --}}
-            <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
-                <span class="small text-muted fw-semibold me-1">Con fruta:</span>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="productosCatalogo">
 
-                <button type="button" class="btn-chip filtro-fruta active-fruta" data-fruta="">
-                    Todos
-                </button>
-                <button type="button" class="btn-chip filtro-fruta" data-fruta="si">
-                    <i class="bi bi-egg-fried me-1"></i>Con fruta
-                </button>
-                <button type="button" class="btn-chip filtro-fruta" data-fruta="no">
-                    <i class="bi bi-dash-circle me-1"></i>Sin fruta
-                </button>
+            @forelse($presentaciones as $presentacion)
 
-                <button type="button" id="limpiarFiltros" class="btn-chip ms-auto">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i>Limpiar filtros
-                </button>
-            </div>
+                @php
+                    $nombreProducto = $presentacion->producto->nombre ?? '';
+                    $nombrePresentacion = $presentacion->nombre ?? '';
+                    $sabor = $presentacion->sabor ?? '';
+                    $envase = $presentacion->envase ?? '';
+                    $contenido = $presentacion->contenido ?? '';
+                    $unidad = $presentacion->unidad ?? '';
+                    $descripcion = $presentacion->producto->descripcion ?? 'Producto lácteo disponible para consulta comercial.';
+                    $imagenCatalogo = $presentacion->imagen_comercial ?: ($presentacion->producto->imagen_referencial ?? null);
+                    $conFruta = isset($presentacion->con_fruta) ? (bool) $presentacion->con_fruta : null;
 
-        </div>
-    </div>
+                    $textoBusqueda = Str::lower(
+                        $nombreProducto . ' ' . $nombrePresentacion . ' ' . $sabor . ' ' .
+                        $envase . ' ' . $contenido . ' ' . $unidad
+                    );
 
+                    $stockDisponible = (float) $presentacion->stock > 0;
+                    $collapseId = 'detalle-' . $presentacion->id;
+                @endphp
 
-    {{-- ============================================================
-         RESULTADOS
-    ============================================================= --}}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="productosCatalogo">
-
-        @forelse($presentaciones as $presentacion)
-
-            @php
-                $nombreProducto = $presentacion->producto->nombre ?? '';
-                $nombrePresentacion = $presentacion->nombre ?? '';
-                $sabor = $presentacion->sabor ?? '';
-                $envase = $presentacion->envase ?? '';
-                $contenido = $presentacion->contenido ?? '';
-                $unidad = $presentacion->unidad ?? '';
-                $conFruta = isset($presentacion->con_fruta) ? (bool) $presentacion->con_fruta : null;
-
-                $textoBusqueda = Str::lower(
-                    $nombreProducto . ' ' . $nombrePresentacion . ' ' . $sabor . ' ' .
-                    $envase . ' ' . $contenido . ' ' . $unidad
-                );
-
-                $stockDisponible = (float) $presentacion->stock > 0;
-                $collapseId = 'detalle-' . $presentacion->id;
-            @endphp
-
-            <div
-                class="col tarjeta-producto"
-                data-busqueda="{{ $textoBusqueda }}"
-                data-producto="{{ Str::lower($nombreProducto) }}"
-                data-sabor="{{ Str::lower($sabor) }}"
-                data-unidad="{{ Str::lower($unidad) }}"
-                data-stock="{{ $stockDisponible ? 'disponible' : 'agotado' }}"
-                data-fruta="{{ $conFruta === null ? '' : ($conFruta ? 'si' : 'no') }}"
-            >
-                <article class="card product-card-slim h-100 shadow-sm">
-
-                    {{-- IMAGEN --}}
-                    <div class="position-relative">
-                        @if($presentacion->imagen_comercial)
-                            <img
-                                src="{{ asset('storage/' . $presentacion->imagen_comercial) }}"
-                                class="product-image-slim"
-                                alt="{{ $presentacion->nombre }}"
-                                loading="lazy"
-                            >
-                        @else
-                            <div class="product-image-slim placeholder">
-                                <i class="bi bi-image fs-2"></i>
-                            </div>
-                        @endif
-
-                        <div class="position-absolute top-0 end-0 p-2">
-                            @if($stockDisponible)
-                                <span class="badge bg-success badge-disp shadow-sm">Disponible</span>
+                <div
+                    class="col tarjeta-producto"
+                    data-busqueda="{{ $textoBusqueda }}"
+                    data-producto="{{ Str::lower($nombreProducto) }}"
+                    data-sabor="{{ Str::lower($sabor) }}"
+                    data-unidad="{{ Str::lower($unidad) }}"
+                    data-stock="{{ $stockDisponible ? 'disponible' : 'agotado' }}"
+                    data-fruta="{{ $conFruta === null ? '' : ($conFruta ? 'si' : 'no') }}"
+                >
+                    <article class="catalog-product h-100 {{ $stockDisponible ? '' : 'is-out' }}">
+                        <div class="catalog-product__media">
+                            @if($imagenCatalogo)
+                                <img
+                                    src="{{ asset('storage/' . $imagenCatalogo) }}"
+                                    class="catalog-product__image"
+                                    alt="{{ $presentacion->nombre }}"
+                                    loading="lazy"
+                                >
                             @else
-                                <span class="badge bg-secondary badge-disp shadow-sm">Agotado</span>
+                                <div class="catalog-product__placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
                             @endif
+
+                            <div class="catalog-product__badges">
+                                @if($stockDisponible)
+                                    <span class="stock-badge stock-badge--available">
+                                        <i class="bi bi-check2-circle"></i>
+                                        Disponible
+                                    </span>
+                                @else
+                                    <span class="stock-badge stock-badge--out">
+                                        <i class="bi bi-x-circle"></i>
+                                        Agotado
+                                    </span>
+                                @endif
+
+                                @if($conFruta === true)
+                                    <span class="fruit-badge">Con fruta</span>
+                                @endif
+                            </div>
                         </div>
-                    </div>
 
-                    {{-- INFO PRINCIPAL (mínima) --}}
-                    <div class="card-slim-body">
+                        <div class="catalog-product__body">
+                            <p class="catalog-product__family">
+                                {{ $nombreProducto ?: 'Producto lácteo' }}
+                            </p>
 
-                        <p class="eyebrow-producto mb-1">{{ $nombreProducto }}</p>
-                        <h3>{{ $nombrePresentacion }}</h3>
+                            <h3>{{ $nombrePresentacion ?: 'Presentación comercial' }}</h3>
 
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="precio-slim">Bs {{ number_format($presentacion->precio, 2) }}</span>
+                            <p class="catalog-product__description">
+                                {{ Str::limit($descripcion, 96) }}
+                            </p>
 
-                            @if($conFruta === true)
-                                <span class="badge badge-fruta">Con fruta</span>
-                            @endif
-                        </div>
-
-                        {{-- BOTÓN VER MÁS --}}
-                        <button
-                            class="toggle-detalle"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#{{ $collapseId }}"
-                            aria-expanded="false"
-                            aria-controls="{{ $collapseId }}"
-                        >
-                            Ver detalle <i class="bi bi-chevron-down"></i>
-                        </button>
-
-                        {{-- DETALLE COLAPSABLE --}}
-                        <div class="collapse" id="{{ $collapseId }}">
-                            <div class="detalle-extra">
+                            <div class="catalog-product__facts">
+                                @if($contenido)
+                                    <span>
+                                        <i class="bi bi-cup-straw"></i>
+                                        {{ $contenido }} {{ $unidad }}
+                                    </span>
+                                @endif
 
                                 @if($sabor)
-                                    <div class="fila mb-1"><i class="bi bi-stars me-1"></i><strong>Sabor:</strong> {{ $sabor }}</div>
+                                    <span>
+                                        <i class="bi bi-stars"></i>
+                                        {{ $sabor }}
+                                    </span>
                                 @endif
 
                                 @if($envase)
-                                    <div class="fila mb-1"><i class="bi bi-box-seam me-1"></i><strong>Envase:</strong> {{ $envase }}</div>
+                                    <span>
+                                        <i class="bi bi-bag"></i>
+                                        {{ $envase }}
+                                    </span>
                                 @endif
 
-                                @if($contenido)
-                                    <div class="fila mb-1"><i class="bi bi-rulers me-1"></i><strong>Contenido:</strong> {{ $contenido }} {{ $unidad }}</div>
+                                @if($conFruta !== null)
+                                    <span>
+                                        <i class="bi bi-flower1"></i>
+                                        {{ $conFruta ? 'Con fruta' : 'Sin fruta' }}
+                                    </span>
                                 @endif
+                            </div>
 
-                                <div class="fila mb-2">
-                                    <i class="bi bi-boxes me-1"></i><strong>Stock:</strong>
-                                    {{ $stockDisponible ? $presentacion->stock . ' disponibles' : 'Agotado' }}
+                            <div class="catalog-product__commercial">
+                                <div>
+                                    <span>Precio</span>
+                                    <strong>Bs {{ number_format($presentacion->precio, 2) }}</strong>
                                 </div>
 
-                                <p class="text-muted mb-3">
-                                    {{ Str::limit($presentacion->producto->descripcion ?? 'Producto lácteo', 110) }}
-                                </p>
+                                <div class="{{ $stockDisponible ? 'text-success' : 'text-muted' }}">
+                                    <span>Stock</span>
+                                    <strong>{{ $stockDisponible ? $presentacion->stock . ' disp.' : 'Sin stock' }}</strong>
+                                </div>
+                            </div>
 
-                                <a href="{{ route('catalogo.detalle', $presentacion) }}" class="btn btn-success btn-sm w-100 rounded-3">
-                                    <i class="bi bi-eye me-1"></i>Ver producto
+                            <div class="catalog-product__actions">
+                                <a href="{{ route('catalogo.detalle', $presentacion) }}" class="btn catalog-product__primary">
+                                    <i class="bi bi-eye"></i>
+                                    Ver producto
                                 </a>
+
+                                <button
+                                    class="catalog-product__toggle"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#{{ $collapseId }}"
+                                    aria-expanded="false"
+                                    aria-controls="{{ $collapseId }}"
+                                    aria-label="Ver detalle de {{ $nombrePresentacion ?: 'producto' }}"
+                                >
+                                    <span>Detalle</span>
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+
+                            <div class="collapse" id="{{ $collapseId }}">
+                                <div class="catalog-product__detail">
+                                    <dl>
+                                        @if($sabor)
+                                            <div>
+                                                <dt>Sabor</dt>
+                                                <dd>{{ $sabor }}</dd>
+                                            </div>
+                                        @endif
+
+                                        @if($envase)
+                                            <div>
+                                                <dt>Envase</dt>
+                                                <dd>{{ $envase }}</dd>
+                                            </div>
+                                        @endif
+
+                                        @if($contenido)
+                                            <div>
+                                                <dt>Contenido</dt>
+                                                <dd>{{ $contenido }} {{ $unidad }}</dd>
+                                            </div>
+                                        @endif
+
+                                        <div>
+                                            <dt>Disponibilidad</dt>
+                                            <dd>{{ $stockDisponible ? $presentacion->stock . ' disponibles' : 'Agotado' }}</dd>
+                                        </div>
+                                    </dl>
+                                </div>
                             </div>
                         </div>
-
-                    </div>
-
-                </article>
-            </div>
-
-        @empty
-
-            <div class="col-12">
-                <div class="alert alert-light border text-center py-5 rounded-4">
-                    <i class="bi bi-box-seam fs-1 text-muted d-block mb-3"></i>
-                    <h4>No hay productos disponibles</h4>
-                    <p class="text-muted mb-0">Actualmente no existen presentaciones registradas.</p>
+                    </article>
                 </div>
-            </div>
 
-        @endforelse
+            @empty
 
-    </div>
+                <div class="col-12">
+                    <div class="catalog-empty-state">
+                        <i class="bi bi-box-seam"></i>
+                        <h3>No hay productos disponibles</h3>
+                        <p>Actualmente no existen presentaciones registradas.</p>
+                    </div>
+                </div>
 
-    {{-- SIN RESULTADOS --}}
-    <div id="sinResultados" class="alert alert-light border text-center py-5 mt-5 rounded-4 d-none">
-        <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
-        <h4>No encontramos productos</h4>
-        <p class="text-muted mb-3">Prueba con otro nombre, sabor, contenido o presentación.</p>
-        <button type="button" id="limpiarFiltros2" class="btn btn-outline-success">
-            Limpiar búsqueda
-        </button>
+            @endforelse
+
+        </div>
+
+        <div id="sinResultados" class="catalog-empty-state mt-5 d-none">
+            <i class="bi bi-search"></i>
+            <h3>No encontramos productos</h3>
+            <p>Prueba con otro nombre, sabor, contenido o presentación.</p>
+            <button type="button" id="limpiarFiltros2" class="btn btn-outline-success">
+                Limpiar búsqueda
+            </button>
+        </div>
+
     </div>
 
 </div>
-
 
 @push('scripts')
 @vite(['resources/js/catalogo.js'])
