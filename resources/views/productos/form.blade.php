@@ -20,8 +20,9 @@
         type="file"
         name="imagen_referencial"
         class="form-control"
-        accept="image/jpeg,image/png,image/jpg,image/gif"
+        accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
     >
+    <div class="form-text">Formatos permitidos: JPG, PNG, GIF o WEBP. Tamaño máximo: 5 MB.</div>
     @if(isset($producto) && $producto->imagen_referencial)
         <div class="mt-2">
             <span class="text-muted small d-block mb-1">Imagen actual:</span>
