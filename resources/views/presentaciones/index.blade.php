@@ -53,6 +53,9 @@
                     </thead>
                     <tbody>
                         @forelse($presentaciones as $presentacion)
+                            @php
+                                $imagenPresentacion = $presentacion->imagen_comercial ?: ($presentacion->producto->imagen_referencial ?? null);
+                            @endphp
                             <tr>
                                 {{-- NUMERACIÓN --}}
                                 <td class="text-center fw-semibold" style="color: var(--text-muted);">
@@ -61,8 +64,8 @@
 
                                 {{-- IMAGEN --}}
                                 <td>
-                                    @if($presentacion->imagen_comercial)
-                                        <img src="{{ asset('storage/' . $presentacion->imagen_comercial) }}"
+                                    @if($imagenPresentacion)
+                                        <img src="{{ asset('storage/' . $imagenPresentacion) }}"
                                              alt="{{ $presentacion->nombre }}"
                                              width="55"
                                              height="55"

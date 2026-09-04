@@ -4,6 +4,10 @@
 
 @section('content')
 
+@php
+    $imagenProducto = $presentacion->imagen_comercial ?: ($presentacion->producto->imagen_referencial ?? null);
+@endphp
+
 <div class="container detalle-container py-4">
 
     {{-- VOLVER --}}
@@ -25,10 +29,10 @@
             ====================================================== --}}
             <div class="col-lg-6">
 
-                @if($presentacion->imagen_comercial)
+                @if($imagenProducto)
 
                     <img
-                        src="{{ asset('storage/' . $presentacion->imagen_comercial) }}"
+                        src="{{ asset('storage/' . $imagenProducto) }}"
                         class="imagen-producto"
                         alt="{{ $presentacion->nombre }}"
                     >
