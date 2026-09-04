@@ -61,6 +61,7 @@
     <div class="col-12">
         <label class="form-label">Imagen comercial</label>
         <input type="file" name="imagen_comercial" class="form-control" accept="image/jpeg,image/png,image/jpg,image/webp">
+        <div class="form-text">Formatos permitidos: JPG, PNG o WEBP. Tamaño máximo: 5 MB.</div>
         @isset($presentacion)
             @if($presentacion->imagen_comercial)
                 <img class="rounded mt-2" src="{{ asset('storage/' . $presentacion->imagen_comercial) }}" alt="Imagen actual" width="110">

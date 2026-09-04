@@ -84,7 +84,7 @@ class PresentacionController extends Controller
             'unidad'           => 'nullable|string|in:ml,L,g,kg',
             'precio'           => 'required|numeric|min:0',
             'stock'            => 'required|integer|min:0',
-            'imagen_comercial' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'imagen_comercial' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
     }
 }
