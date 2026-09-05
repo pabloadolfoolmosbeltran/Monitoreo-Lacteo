@@ -113,3 +113,59 @@
                 </table>
             </div>
             <div class="card-footer bg-white text-end">
+                <button class="btn btn-success" type="submit">
+                    <i class="bi bi-check2-circle me-1"></i> Guardar consignación
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<template id="item-row-template">
+    <tr>
+        <td>
+            <select name="items[__INDEX__][presentacion_id]" class="form-select" required>
+                <option value="">Seleccione</option>
+                @foreach($presentaciones as $presentacion)
+                    <option value="{{ $presentacion->id }}">
+                        {{ $presentacion->producto->nombre }} - {{ $presentacion->nombre }}
+                    </option>
+                @endforeach
+            </select>
+        </td>
+        <td><input type="number" step="0.001" min="0.001" name="items[__INDEX__][cantidad_recibida]" class="form-control" required></td>
+        <td><input type="number" step="0.01" min="0" name="items[__INDEX__][precio_productor]" class="form-control" required></td>
+        <td><input type="number" step="0.01" min="0" name="items[__INDEX__][precio_venta]" class="form-control" required></td>
+        <td class="text-end">
+            <button type="button" class="btn btn-outline-danger btn-sm quitar-item" title="Quitar ítem">
+                <i class="bi bi-trash3"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.querySelector('#items-table tbody');
+    const template = document.querySelector('#item-row-template').innerHTML;
+    const addButton = document.querySelector('#agregar-item');
+
+    addButton.addEventListener('click', () => {
+        const index = tbody.querySelectorAll('tr').length;
+        tbody.insertAdjacentHTML('beforeend', template.replaceAll('__INDEX__', index));
+    });
+
+    tbody.addEventListener('click', (event) => {
+        const button = event.target.closest('.quitar-item');
+
+        if (!button || tbody.querySelectorAll('tr').length === 1) {
+            return;
+        }
+
+        button.closest('tr').remove();
+    });
+});
+</script>
+@endpush
+@endsection
