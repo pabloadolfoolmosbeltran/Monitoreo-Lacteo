@@ -43,3 +43,53 @@ class ConsignacionModuleTest extends TestCase
     }
 
     public function test_venta_no_puede_superar_cantidad_disponible(): void
+    {
+        $escenario = $this->crearEscenarioConsignado();
+
+        $this->actingAs($escenario['vendedor'])
+            ->from(route('consignaciones.show', $escenario['consignacion']))
+            ->post(route('consignacion-items.ventas.store', $escenario['item']), [
+                'cantidad_vendida' => '21.000',
+                'precio_unitario_venta' => '30.00',
+            ])
+            ->assertRedirect(route('consignaciones.show', $escenario['consignacion']))
+            ->assertSessionHasErrors('cantidad_vendida');
+
+        $this->assertDatabaseCount('ventas', 0);
+        $this->assertSame('20.000', $escenario['item']->refresh()->cantidad_disponible);
+    }
+
+    public function test_consignacion_rechaza_precio_de_venta_menor_al_precio_productor(): void
+    {
+        $escenario = $this->crearBaseComercial();
+
+        $this->actingAs($escenario['vendedor'])
+            ->from(route('consignaciones.create'))
+            ->post(route('consignaciones.store'), [
+                'user_id' => $escenario['productor']->id,
+                'fecha_entrada' => '2026-09-05',
+                'items' => [[
+                    'presentacion_id' => $escenario['presentacion']->id,
+                    'cantidad_recibida' => '2.000',
+                    'precio_productor' => '26.00',
+                    'precio_venta' => '25.99',
+                ]],
+            ])
+            ->assertRedirect(route('consignaciones.create'))
+            ->assertSessionHasErrors('items.0.precio_venta');
+
+        $this->assertDatabaseCount('consignaciones', 0);
+        $this->assertDatabaseCount('consignacion_items', 0);
+    }
+
+    public function test_liquidacion_calcula_monto_productor_y_bloquea_nuevas_ventas(): void
+    {
+        $escenario = $this->crearEscenarioConsignado();
+
+        $this->actingAs($escenario['vendedor'])
+            ->post(route('consignacion-items.ventas.store', $escenario['item']), [
+                'cantidad_vendida' => '15.000',
+                'precio_unitario_venta' => '30.00',
+            ]);
+
+        $this->actingAs($escenario['vendedor'])
