@@ -33,3 +33,43 @@ class DevolucionController extends Controller
                     'consignacion' => 'Una consignación liquidada o devuelta no puede recibir devoluciones.',
                 ]);
             }
+
+            $cantidadVendida = $item->ventas->reduce(
+                fn (string $total, $venta): string => Decimal::add($total, $venta->cantidad_vendida, 3),
+                '0.000'
+            );
+            $cantidadDevuelta = $item->devoluciones->reduce(
+                fn (string $total, $devolucion): string => Decimal::add($total, $devolucion->cantidad_devuelta, 3),
+                '0.000'
+            );
+            $cantidadRetornable = Decimal::sub($cantidadVendida, $cantidadDevuelta, 3);
+
+            if (Decimal::compare($datos['cantidad_devuelta'], $cantidadRetornable, 3) > 0) {
+                throw ValidationException::withMessages([
+                    'cantidad_devuelta' => 'La devolución no puede superar la cantidad vendida pendiente de devolución.',
+                ]);
+            }
+
+            Devolucion::create([
+                'consignacion_item_id' => $item->id,
+                'user_id' => Auth::id(),
+                'cantidad_devuelta' => $datos['cantidad_devuelta'],
+                'precio_unitario_venta' => $datos['precio_unitario_venta'] ?? $item->precio_venta,
+                'fecha_devolucion' => $datos['fecha_devolucion'] ?? now(),
+                'tipo' => $datos['tipo'],
+                'observaciones' => $datos['observaciones'] ?? null,
+            ]);
+
+            $item->cantidad_disponible = Decimal::add(
+                $item->cantidad_disponible,
+                $datos['cantidad_devuelta'],
+                3
+            );
+            $item->save();
+        });
+
+        return redirect()
+            ->route('consignaciones.show', $item->consignacion_id)
+            ->with('success', 'Devolución registrada correctamente.');
+    }
+}
