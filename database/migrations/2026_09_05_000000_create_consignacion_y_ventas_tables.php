@@ -38,3 +38,23 @@ return new class extends Migration
             $table->foreignId('consignacion_item_id')->constrained('consignacion_items')->restrictOnDelete();
             $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
             $table->decimal('cantidad_vendida', 10, 3);
+            $table->decimal('precio_unitario_venta', 10, 2);
+            $table->timestamp('fecha_venta')->useCurrent();
+            $table->text('observaciones')->nullable();
+            $table->timestamps();
+
+            $table->index(['consignacion_item_id', 'fecha_venta']);
+        });
+
+        Schema::create('liquidaciones', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('consignacion_id')->unique()->constrained('consignaciones')->restrictOnDelete();
+            $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
+            $table->date('fecha_liquidacion');
+            $table->decimal('monto_liquidado', 10, 2);
+            $table->text('observaciones')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('devoluciones', function (Blueprint $table) {
+            $table->id();
