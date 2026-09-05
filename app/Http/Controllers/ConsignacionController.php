@@ -103,3 +103,23 @@ class ConsignacionController extends Controller
             'items' => 'required|array|min:1',
             'items.*.presentacion_id' => 'required|distinct|exists:presentaciones,id,activo,1',
             'items.*.cantidad_recibida' => 'required|numeric|gt:0',
+            'items.*.precio_productor' => 'required|numeric|min:0',
+            'items.*.precio_venta' => 'required|numeric|min:0',
+        ]);
+    }
+
+    private function validarMargenes(array $items): void
+    {
+        $mensajes = [];
+
+        foreach ($items as $indice => $item) {
+            if (Decimal::compare($item['precio_venta'], $item['precio_productor'], 2) < 0) {
+                $mensajes["items.$indice.precio_venta"] = 'El precio de venta debe ser mayor o igual al precio del productor.';
+            }
+        }
+
+        if ($mensajes !== []) {
+            throw ValidationException::withMessages($mensajes);
+        }
+    }
+}
