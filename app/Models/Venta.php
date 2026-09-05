@@ -38,3 +38,24 @@ class Venta extends Model
 
     public function vendedor(): BelongsTo
     {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function getTotalVentaAttribute(): string
+    {
+        return Decimal::mul($this->cantidad_vendida, $this->precio_unitario_venta, 2);
+    }
+
+    public function getMargenObtenidoAttribute(): string
+    {
+        $this->loadMissing('consignacionItem');
+
+        $margenUnitario = Decimal::sub(
+            $this->precio_unitario_venta,
+            $this->consignacionItem->precio_productor,
+            2
+        );
+
+        return Decimal::mul($this->cantidad_vendida, $margenUnitario, 2);
+    }
+}
