@@ -143,3 +143,43 @@ class ConsignacionModuleTest extends TestCase
             'producto_id' => $producto->id,
             'nombre' => 'Yogurt de Frutilla 1 L',
             'envase' => 'Botella',
+            'sabor' => 'Frutilla',
+            'contenido' => '1.00',
+            'unidad' => 'L',
+            'precio' => '30.00',
+            'stock' => 20,
+            'con_fruta' => true,
+            'activo' => true,
+        ]);
+
+        return compact('productor', 'vendedor', 'producto', 'presentacion');
+    }
+
+    /**
+     * @return array{productor: User, vendedor: User, producto: Producto, presentacion: Presentacion, consignacion: Consignacion, item: ConsignacionItem}
+     */
+    private function crearEscenarioConsignado(): array
+    {
+        $base = $this->crearBaseComercial();
+
+        $consignacion = Consignacion::create([
+            'user_id' => $base['productor']->id,
+            'fecha_entrada' => '2026-09-05',
+            'estado' => 'abierta',
+        ]);
+        $item = ConsignacionItem::create([
+            'consignacion_id' => $consignacion->id,
+            'presentacion_id' => $base['presentacion']->id,
+            'cantidad_recibida' => '20.000',
+            'cantidad_disponible' => '20.000',
+            'precio_productor' => '26.00',
+            'precio_venta' => '30.00',
+        ]);
+
+        return [
+            ...$base,
+            'consignacion' => $consignacion,
+            'item' => $item,
+        ];
+    }
+}
