@@ -33,3 +33,43 @@ class ConsignacionController extends Controller
         }
 
         return view('consignaciones.index', [
+            'consignaciones' => $consulta->paginate(10)->withQueryString(),
+            'estados' => ['abierta', 'liquidada', 'devuelta'],
+        ]);
+    }
+
+    public function create()
+    {
+        return view('consignaciones.create', [
+            'productores' => User::where('activo', true)->orderBy('name')->get(),
+            'presentaciones' => Presentacion::with('producto')
+                ->where('activo', true)
+                ->whereHas('producto', fn ($query) => $query->where('activo', true))
+                ->orderBy('nombre')
+                ->get(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $datos = $this->validar($request);
+        $this->validarMargenes($datos['items']);
+
+        $consignacion = DB::transaction(function () use ($datos) {
+            $consignacion = Consignacion::create([
+                'user_id' => $datos['user_id'],
+                'fecha_entrada' => $datos['fecha_entrada'],
+                'observaciones' => $datos['observaciones'] ?? null,
+                'estado' => 'abierta',
+            ]);
+
+            foreach ($datos['items'] as $item) {
+                $consignacion->items()->create([
+                    'presentacion_id' => $item['presentacion_id'],
+                    'cantidad_recibida' => $item['cantidad_recibida'],
+                    'cantidad_disponible' => $item['cantidad_recibida'],
+                    'precio_productor' => $item['precio_productor'],
+                    'precio_venta' => $item['precio_venta'],
+                ]);
+            }
+
