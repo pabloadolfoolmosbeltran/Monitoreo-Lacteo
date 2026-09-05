@@ -78,3 +78,22 @@ return new class extends Migration
         Schema::dropIfExists('devoluciones');
         Schema::dropIfExists('liquidaciones');
         Schema::dropIfExists('ventas');
+        Schema::dropIfExists('consignacion_items');
+        Schema::dropIfExists('consignaciones');
+    }
+
+    private function addCheckConstraints(): void
+    {
+        if (! in_array(DB::getDriverName(), ['mysql', 'pgsql'], true)) {
+            return;
+        }
+
+        DB::statement('ALTER TABLE consignacion_items ADD CONSTRAINT chk_consignacion_items_precio_margen CHECK (precio_venta >= precio_productor)');
+        DB::statement('ALTER TABLE consignacion_items ADD CONSTRAINT chk_consignacion_items_cantidad_pos CHECK (cantidad_recibida > 0)');
+        DB::statement('ALTER TABLE consignacion_items ADD CONSTRAINT chk_consignacion_items_disponible CHECK (cantidad_disponible >= 0 AND cantidad_disponible <= cantidad_recibida)');
+        DB::statement('ALTER TABLE ventas ADD CONSTRAINT chk_ventas_cantidad_pos CHECK (cantidad_vendida > 0)');
+        DB::statement('ALTER TABLE ventas ADD CONSTRAINT chk_ventas_precio_pos CHECK (precio_unitario_venta >= 0)');
+        DB::statement('ALTER TABLE liquidaciones ADD CONSTRAINT chk_liquidaciones_monto_pos CHECK (monto_liquidado >= 0)');
+        DB::statement('ALTER TABLE devoluciones ADD CONSTRAINT chk_devoluciones_cantidad_pos CHECK (cantidad_devuelta > 0)');
+    }
+};
