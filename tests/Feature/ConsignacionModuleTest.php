@@ -93,3 +93,53 @@ class ConsignacionModuleTest extends TestCase
             ]);
 
         $this->actingAs($escenario['vendedor'])
+            ->post(route('consignaciones.liquidaciones.store', $escenario['consignacion']), [
+                'fecha_liquidacion' => '2026-09-05',
+            ])
+            ->assertRedirect(route('consignaciones.show', $escenario['consignacion']));
+
+        $this->assertDatabaseHas('liquidaciones', [
+            'consignacion_id' => $escenario['consignacion']->id,
+            'monto_liquidado' => '390.00',
+        ]);
+        $this->assertSame('liquidada', $escenario['consignacion']->refresh()->estado);
+
+        $this->actingAs($escenario['vendedor'])
+            ->from(route('consignaciones.show', $escenario['consignacion']))
+            ->post(route('consignacion-items.ventas.store', $escenario['item']), [
+                'cantidad_vendida' => '1.000',
+                'precio_unitario_venta' => '30.00',
+            ])
+            ->assertSessionHasErrors('consignacion');
+    }
+
+    /**
+     * @return array{productor: User, vendedor: User, producto: Producto, presentacion: Presentacion}
+     */
+    private function crearBaseComercial(): array
+    {
+        $productor = User::factory()->create([
+            'rol' => 'Trabajador',
+            'activo' => true,
+            'nombre_unidad_productiva' => 'Unidad A',
+        ]);
+        $vendedor = User::factory()->create([
+            'rol' => 'Administrador',
+            'activo' => true,
+        ]);
+        $producto = Producto::create([
+            'nombre' => 'Yogurt de Frutilla',
+            'descripcion' => 'Yogurt natural con fruta',
+            'temperatura_minima' => '4.00',
+            'temperatura_maxima' => '8.00',
+            'temperatura_pasteurizacion' => '72.00',
+            'tipo_cuajo' => null,
+            'cuajo_por_litro' => null,
+            'unidad_cuajo' => 'ml',
+            'stock_cuajo' => '0.00',
+            'activo' => true,
+        ]);
+        $presentacion = Presentacion::create([
+            'producto_id' => $producto->id,
+            'nombre' => 'Yogurt de Frutilla 1 L',
+            'envase' => 'Botella',
