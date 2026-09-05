@@ -73,3 +73,33 @@ class ConsignacionController extends Controller
                 ]);
             }
 
+            return $consignacion;
+        });
+
+        return redirect()
+            ->route('consignaciones.show', $consignacion)
+            ->with('success', 'Consignación registrada correctamente.');
+    }
+
+    public function show(Consignacion $consignacion)
+    {
+        $consignacion->load([
+            'productor',
+            'liquidacion.responsable',
+            'items.presentacion.producto',
+            'items.ventas.vendedor',
+            'items.devoluciones.responsable',
+        ]);
+
+        return view('consignaciones.show', compact('consignacion'));
+    }
+
+    private function validar(Request $request): array
+    {
+        return $request->validate([
+            'user_id' => 'required|exists:users,id,activo,1',
+            'fecha_entrada' => 'required|date',
+            'observaciones' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*.presentacion_id' => 'required|distinct|exists:presentaciones,id,activo,1',
+            'items.*.cantidad_recibida' => 'required|numeric|gt:0',
