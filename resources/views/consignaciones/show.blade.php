@@ -58,3 +58,63 @@
             </div>
         </div>
         <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Unidad productiva</div>
+                    <div class="fw-semibold">{{ $consignacion->productor->nombre_unidad_productiva ?? 'Sin registro' }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Liquidación</div>
+                    @if($consignacion->liquidacion)
+                        <div class="fw-semibold">Bs {{ $consignacion->liquidacion->monto_liquidado }}</div>
+                        <div class="small text-muted">{{ $consignacion->liquidacion->fecha_liquidacion->format('d/m/Y') }}</div>
+                    @elseif($consignacion->estado === 'abierta')
+                        <form method="POST" action="{{ route('consignaciones.liquidaciones.store', $consignacion) }}" class="d-flex gap-2">
+                            @csrf
+                            <input type="date" name="fecha_liquidacion" class="form-control form-control-sm" value="{{ now()->toDateString() }}">
+                            <button class="btn btn-primary btn-sm" title="Liquidar">
+                                <i class="bi bi-cash-coin"></i>
+                            </button>
+                        </form>
+                    @else
+                        <span class="text-muted">Sin liquidación</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-boxes me-2"></i>Estado de ítems
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th>Presentación</th>
+                        <th class="text-end">Recibida</th>
+                        <th class="text-end">Disponible</th>
+                        <th class="text-end">Vendida</th>
+                        <th class="text-end">Precio productor</th>
+                        <th class="text-end">Precio venta</th>
+                        <th class="text-end">Margen unitario</th>
+                        <th class="text-end">Monto productor</th>
+                        <th class="text-end">Margen encargado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($consignacion->items as $item)
+                        <tr>
+                            <td class="fw-semibold">{{ $item->presentacion->producto->nombre }}</td>
+                            <td>{{ $item->presentacion->nombre }}</td>
+                            <td class="text-end">{{ $item->cantidad_recibida }}</td>
+                            <td class="text-end">{{ $item->cantidad_disponible }}</td>
+                            <td class="text-end">{{ $item->cantidad_vendida }}</td>
+                            <td class="text-end">Bs {{ $item->precio_productor }}</td>
+                            <td class="text-end">Bs {{ $item->precio_venta }}</td>
