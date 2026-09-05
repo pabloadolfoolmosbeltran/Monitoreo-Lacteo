@@ -18,3 +18,23 @@ class Consignacion extends Model
     protected $fillable = [
         'user_id',
         'fecha_entrada',
+        'observaciones',
+        'estado',
+    ];
+
+    protected $casts = [
+        'fecha_entrada' => 'date',
+    ];
+
+    public function productor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(ConsignacionItem::class);
+    }
+
+    public function liquidacion(): HasOne
+    {
