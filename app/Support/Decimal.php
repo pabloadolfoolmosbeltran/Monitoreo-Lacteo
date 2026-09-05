@@ -18,3 +18,23 @@ final class Decimal
     {
         return self::round(bcmul(self::value($left), self::value($right), $scale + 3), $scale);
     }
+
+    public static function compare(mixed $left, mixed $right, int $scale = 2): int
+    {
+        return bccomp(self::value($left), self::value($right), $scale);
+    }
+
+    public static function round(mixed $value, int $scale = 2): string
+    {
+        $number = self::value($value);
+        $step = self::roundingStep($scale);
+
+        if (str_starts_with($number, '-')) {
+            return bcsub($number, $step, $scale);
+        }
+
+        return bcadd($number, $step, $scale);
+    }
+
+    private static function value(mixed $value): string
+    {
