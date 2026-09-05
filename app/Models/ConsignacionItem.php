@@ -43,3 +43,23 @@ class ConsignacionItem extends Model
     {
         return $this->belongsTo(Presentacion::class);
     }
+
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class);
+    }
+
+    public function devoluciones(): HasMany
+    {
+        return $this->hasMany(Devolucion::class);
+    }
+
+    public function getMargenUnitarioAttribute(): string
+    {
+        return Decimal::sub($this->precio_venta, $this->precio_productor, 2);
+    }
+
+    public function getCantidadVendidaAttribute(): string
+    {
+        $ventas = $this->relationLoaded('ventas') ? $this->ventas : $this->ventas()->get();
+
