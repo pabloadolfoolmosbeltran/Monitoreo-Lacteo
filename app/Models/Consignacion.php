@@ -53,3 +53,13 @@ class Consignacion extends Model
 
     private function sumarItems(string $attribute): string
     {
+        $items = $this->relationLoaded('items')
+            ? $this->items
+            : $this->items()->with('ventas')->get();
+
+        return $items->reduce(
+            fn (string $total, ConsignacionItem $item): string => Decimal::add($total, $item->{$attribute}, 2),
+            '0.00'
+        );
+    }
+}
