@@ -188,3 +188,66 @@
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-white fw-semibold">
                     <i class="bi bi-cart-check me-2"></i>Ventas
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Presentación</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Margen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($consignacion->items->flatMap->ventas as $venta)
+                                <tr>
+                                    <td>{{ $venta->fecha_venta->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $venta->consignacionItem->presentacion->nombre }}</td>
+                                    <td class="text-end">{{ $venta->cantidad_vendida }}</td>
+                                    <td class="text-end">Bs {{ $venta->total_venta }}</td>
+                                    <td class="text-end">Bs {{ $venta->margen_obtenido }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted py-4">Sin ventas</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Devoluciones
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Presentación</th>
+                                <th>Tipo</th>
+                                <th class="text-end">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($consignacion->items->flatMap->devoluciones as $devolucion)
+                                <tr>
+                                    <td>{{ $devolucion->fecha_devolucion->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $devolucion->consignacionItem->presentacion->nombre }}</td>
+                                    <td>{{ ucfirst($devolucion->tipo) }}</td>
+                                    <td class="text-end">{{ $devolucion->cantidad_devuelta }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted py-4">Sin devoluciones</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
