@@ -53,3 +53,63 @@
                         <label class="form-label">Observaciones</label>
                         <textarea name="observaciones" class="form-control @error('observaciones') is-invalid @enderror" rows="2">{{ old('observaciones') }}</textarea>
                         @error('observaciones')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-boxes me-2"></i>Ítems recibidos</span>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="agregar-item">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar
+                </button>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" id="items-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Presentación</th>
+                            <th style="width: 170px;">Cantidad</th>
+                            <th style="width: 180px;">Precio productor</th>
+                            <th style="width: 180px;">Precio venta</th>
+                            <th class="text-end" style="width: 80px;">Quitar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($items as $indice => $item)
+                            <tr>
+                                <td>
+                                    <select name="items[{{ $indice }}][presentacion_id]" class="form-select @error("items.$indice.presentacion_id") is-invalid @enderror" required>
+                                        <option value="">Seleccione</option>
+                                        @foreach($presentaciones as $presentacion)
+                                            <option value="{{ $presentacion->id }}" @selected((string) ($item['presentacion_id'] ?? '') === (string) $presentacion->id)>
+                                                {{ $presentacion->producto->nombre }} - {{ $presentacion->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error("items.$indice.presentacion_id")<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </td>
+                                <td>
+                                    <input type="number" step="0.001" min="0.001" name="items[{{ $indice }}][cantidad_recibida]" value="{{ $item['cantidad_recibida'] ?? '' }}" class="form-control @error("items.$indice.cantidad_recibida") is-invalid @enderror" required>
+                                    @error("items.$indice.cantidad_recibida")<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="items[{{ $indice }}][precio_productor]" value="{{ $item['precio_productor'] ?? '' }}" class="form-control @error("items.$indice.precio_productor") is-invalid @enderror" required>
+                                    @error("items.$indice.precio_productor")<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="items[{{ $indice }}][precio_venta]" value="{{ $item['precio_venta'] ?? '' }}" class="form-control @error("items.$indice.precio_venta") is-invalid @enderror" required>
+                                    @error("items.$indice.precio_venta")<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-outline-danger btn-sm quitar-item" title="Quitar ítem">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white text-end">
