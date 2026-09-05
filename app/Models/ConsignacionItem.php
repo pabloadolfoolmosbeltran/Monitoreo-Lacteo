@@ -63,3 +63,24 @@ class ConsignacionItem extends Model
     {
         $ventas = $this->relationLoaded('ventas') ? $this->ventas : $this->ventas()->get();
 
+        return $ventas->reduce(
+            fn (string $total, Venta $venta): string => Decimal::add($total, $venta->cantidad_vendida, 3),
+            '0.000'
+        );
+    }
+
+    public function getMontoProductorAttribute(): string
+    {
+        return Decimal::mul($this->cantidad_vendida, $this->precio_productor, 2);
+    }
+
+    public function getMargenEncargadoAttribute(): string
+    {
+        $ventas = $this->relationLoaded('ventas') ? $this->ventas : $this->ventas()->get();
+
+        return $ventas->reduce(
+            fn (string $total, Venta $venta): string => Decimal::add($total, $venta->margen_obtenido, 2),
+            '0.00'
+        );
+    }
+}
