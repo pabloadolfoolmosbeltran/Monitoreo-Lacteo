@@ -45,6 +45,11 @@
                     <i class="bi bi-shop"></i> Presentaciones Comerciales
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="{{ route('consignaciones.index') }}" class="nav-link {{ request()->is('consignaciones*') ? 'active' : '' }}">
+                    <i class="bi bi-receipt-cutoff"></i> Consignaciones y Ventas
+                </a>
+            </li>
         </ul>
     @endif
 
