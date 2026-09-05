@@ -58,3 +58,23 @@ return new class extends Migration
 
         Schema::create('devoluciones', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('consignacion_item_id')->constrained('consignacion_items')->restrictOnDelete();
+            $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
+            $table->decimal('cantidad_devuelta', 10, 3);
+            $table->decimal('precio_unitario_venta', 10, 2);
+            $table->timestamp('fecha_devolucion')->useCurrent();
+            $table->enum('tipo', ['parcial', 'total']);
+            $table->text('observaciones')->nullable();
+            $table->timestamps();
+
+            $table->index(['consignacion_item_id', 'fecha_devolucion']);
+        });
+
+        $this->addCheckConstraints();
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('devoluciones');
+        Schema::dropIfExists('liquidaciones');
+        Schema::dropIfExists('ventas');
