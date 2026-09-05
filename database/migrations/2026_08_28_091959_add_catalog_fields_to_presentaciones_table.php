@@ -10,29 +10,41 @@ return new class extends Migration
     {
         Schema::table('presentaciones', function (Blueprint $table) {
 
-            $table->string('envase', 100)
-                ->nullable()
-                ->after('nombre');
+            if (! Schema::hasColumn('presentaciones', 'envase')) {
+                $table->string('envase', 100)
+                    ->nullable()
+                    ->after('nombre');
+            }
 
-            $table->string('sabor', 100)
-                ->nullable()
-                ->after('envase');
+            if (! Schema::hasColumn('presentaciones', 'sabor')) {
+                $table->string('sabor', 100)
+                    ->nullable()
+                    ->after('envase');
+            }
 
-            $table->decimal('contenido', 10, 2)
-                ->nullable()
-                ->after('sabor');
+            if (! Schema::hasColumn('presentaciones', 'contenido')) {
+                $table->decimal('contenido', 10, 2)
+                    ->nullable()
+                    ->after('sabor');
+            }
 
-            $table->string('unidad', 10)
-                ->nullable()
-                ->after('contenido');
+            if (! Schema::hasColumn('presentaciones', 'unidad')) {
+                $table->string('unidad', 10)
+                    ->nullable()
+                    ->after('contenido');
+            }
 
-            $table->boolean('con_fruta')
-                ->default(false)
-                ->after('imagen_comercial');
+            if (! Schema::hasColumn('presentaciones', 'con_fruta')) {
+                $table->boolean('con_fruta')
+                    ->default(false)
+                    ->after('imagen_comercial');
+            }
 
-            $table->boolean('activo')
-                ->default(true)
-                ->after('con_fruta');
+            if (! Schema::hasColumn('presentaciones', 'activo')) {
+                $table->boolean('activo')
+                    ->default(true)
+                    ->after('con_fruta');
+            }
         });
     }
 
@@ -45,7 +57,6 @@ return new class extends Migration
                 'contenido',
                 'unidad',
                 'con_fruta',
-                'activo'
             ]);
         });
     }
