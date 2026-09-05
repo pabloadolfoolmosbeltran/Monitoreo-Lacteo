@@ -118,3 +118,73 @@
                             <td class="text-end">{{ $item->cantidad_vendida }}</td>
                             <td class="text-end">Bs {{ $item->precio_productor }}</td>
                             <td class="text-end">Bs {{ $item->precio_venta }}</td>
+                            <td class="text-end">Bs {{ $item->margen_unitario }}</td>
+                            <td class="text-end">Bs {{ $item->monto_productor }}</td>
+                            <td class="text-end">Bs {{ $item->margen_encargado }}</td>
+                        </tr>
+                        @if($consignacion->estado === 'abierta')
+                            <tr class="table-light">
+                                <td colspan="10">
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-lg-6">
+                                            <form method="POST" action="{{ route('consignacion-items.ventas.store', $item) }}" class="row g-2 align-items-end">
+                                                @csrf
+                                                <div class="col-md-3">
+                                                    <label class="form-label small">Cantidad</label>
+                                                    <input type="number" step="0.001" min="0.001" max="{{ $item->cantidad_disponible }}" name="cantidad_vendida" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small">Precio</label>
+                                                    <input type="number" step="0.01" min="{{ $item->precio_productor }}" name="precio_unitario_venta" value="{{ $item->precio_venta }}" class="form-control form-control-sm">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Observaciones</label>
+                                                    <input type="text" name="observaciones" class="form-control form-control-sm">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button class="btn btn-success btn-sm w-100" title="Registrar venta">
+                                                        <i class="bi bi-cart-check"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <form method="POST" action="{{ route('consignacion-items.devoluciones.store', $item) }}" class="row g-2 align-items-end">
+                                                @csrf
+                                                <div class="col-md-3">
+                                                    <label class="form-label small">Cantidad</label>
+                                                    <input type="number" step="0.001" min="0.001" name="cantidad_devuelta" class="form-control form-control-sm" required>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small">Tipo</label>
+                                                    <select name="tipo" class="form-select form-select-sm" required>
+                                                        <option value="parcial">Parcial</option>
+                                                        <option value="total">Total</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small">Observaciones</label>
+                                                    <input type="text" name="observaciones" class="form-control form-control-sm">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button class="btn btn-warning btn-sm w-100" title="Registrar devolución">
+                                                        <i class="bi bi-arrow-counterclockwise"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-cart-check me-2"></i>Ventas
