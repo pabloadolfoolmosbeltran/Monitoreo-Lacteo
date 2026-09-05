@@ -43,3 +43,48 @@
                     <select name="estado" class="form-select">
                         <option value="">Todos</option>
                         @foreach($estados as $estado)
+                            <option value="{{ $estado }}" @selected(request('estado') === $estado)>
+                                {{ ucfirst($estado) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button class="btn btn-dark flex-fill" type="submit">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                    <a href="{{ route('consignaciones.index') }}" class="btn btn-secondary" title="Limpiar filtros">
+                        <i class="bi bi-eraser"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-list-ul me-2"></i>Registros</span>
+            <span class="badge bg-light text-dark border">{{ $consignaciones->total() }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Productor</th>
+                        <th>Unidad productiva</th>
+                        <th class="text-center">Ítems</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($consignaciones as $consignacion)
+                        @php
+                            $badge = [
+                                'abierta' => 'success',
+                                'liquidada' => 'primary',
+                                'devuelta' => 'secondary',
+                            ][$consignacion->estado] ?? 'secondary';
+                        @endphp
+                        <tr>
