@@ -88,3 +88,35 @@
                             ][$consignacion->estado] ?? 'secondary';
                         @endphp
                         <tr>
+                            <td>{{ $consignacion->fecha_entrada->format('d/m/Y') }}</td>
+                            <td class="fw-semibold">{{ $consignacion->productor->name }}</td>
+                            <td>{{ $consignacion->productor->nombre_unidad_productiva ?? 'Sin registro' }}</td>
+                            <td class="text-center">{{ $consignacion->items_count }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-{{ $badge }}">{{ ucfirst($consignacion->estado) }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route('consignaciones.show', $consignacion) }}" class="btn btn-info btn-sm" title="Ver detalle">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                No hay consignaciones registradas.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($consignaciones->hasPages())
+            <div class="card-footer bg-white d-flex justify-content-center">
+                {{ $consignaciones->links() }}
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
