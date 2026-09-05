@@ -38,3 +38,18 @@ class Consignacion extends Model
 
     public function liquidacion(): HasOne
     {
+        return $this->hasOne(Liquidacion::class);
+    }
+
+    public function getMontoProductorAttribute(): string
+    {
+        return $this->sumarItems('monto_productor');
+    }
+
+    public function getMargenEncargadoAttribute(): string
+    {
+        return $this->sumarItems('margen_encargado');
+    }
+
+    private function sumarItems(string $attribute): string
+    {
