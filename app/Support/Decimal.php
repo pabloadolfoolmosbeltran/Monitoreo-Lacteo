@@ -38,3 +38,19 @@ final class Decimal
 
     private static function value(mixed $value): string
     {
+        if ($value === null || $value === '') {
+            return '0';
+        }
+
+        return (string) $value;
+    }
+
+    private static function roundingStep(int $scale): string
+    {
+        if ($scale <= 0) {
+            return '0.5';
+        }
+
+        return '0.'.str_repeat('0', $scale).'5';
+    }
+}
