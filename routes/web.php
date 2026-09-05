@@ -1,17 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ProduccionController;
-use App\Http\Controllers\ControlController;
 use App\Http\Controllers\AlertaController;
-use App\Http\Controllers\EventoController;
-use App\Http\Controllers\ProductoController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\Api\Esp32Controller;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\ConsignacionController;
+use App\Http\Controllers\ControlController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DevolucionController;
+use App\Http\Controllers\EventoController;
+use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\PresentacionController;
+use App\Http\Controllers\ProduccionController;
+use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\VentaController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('catalogo.index');
@@ -32,10 +37,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
 
-    Route::get('/api/dashboard', [App\Http\Controllers\Api\Esp32Controller::class, 'dashboard']);
-    Route::get('/api/temperaturas', [App\Http\Controllers\Api\Esp32Controller::class, 'temperaturas']);
+    Route::get('/api/dashboard', [Esp32Controller::class, 'dashboard']);
+    Route::get('/api/temperaturas', [Esp32Controller::class, 'temperaturas']);
     Route::patch('/alertas/{id}/atender', [AlertaController::class, 'atender'])->name('alertas.atender');
-    Route::get('/obtenerDatosGrafico', [App\Http\Controllers\Api\Esp32Controller::class, 'obtenerDatosGrafico']);
+    Route::get('/obtenerDatosGrafico', [Esp32Controller::class, 'obtenerDatosGrafico']);
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -47,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/control/motor/{estado}', [ControlController::class, 'motor']);
     Route::post('/control/ventilador/{estado}', [ControlController::class, 'ventilador']);
     Route::post('/control/sensor/{estado}', [ControlController::class, 'sensor']);
-    Route::post('/control/{tipo}/modo', [App\Http\Controllers\ControlController::class, 'cambiarModo']);
+    Route::post('/control/{tipo}/modo', [ControlController::class, 'cambiarModo']);
 
     Route::get('/alertas', [AlertaController::class, 'index']);
     Route::get('/eventos', [EventoController::class, 'index']);
@@ -71,6 +76,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/presentaciones', [PresentacionController::class, 'store'])->name('presentaciones.store');
         Route::get('/presentaciones/{presentacion}/edit', [PresentacionController::class, 'edit'])->name('presentaciones.edit');
         Route::put('/presentaciones/{presentacion}', [PresentacionController::class, 'update'])->name('presentaciones.update');
+
+        Route::resource('consignaciones', ConsignacionController::class)
+            ->parameters(['consignaciones' => 'consignacion'])
+            ->only(['index', 'create', 'store', 'show']);
+        Route::post('/consignacion-items/{item}/ventas', [VentaController::class, 'store'])
+            ->name('consignacion-items.ventas.store');
+        Route::post('/consignacion-items/{item}/devoluciones', [DevolucionController::class, 'store'])
+            ->name('consignacion-items.devoluciones.store');
+        Route::post('/consignaciones/{consignacion}/liquidaciones', [LiquidacionController::class, 'store'])
+            ->name('consignaciones.liquidaciones.store');
 
     });
 
