@@ -4,11 +4,9 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Produccion;
-use App\Models\Evento;
 
 class User extends Authenticatable
 {
@@ -48,5 +46,25 @@ class User extends Authenticatable
     public function eventos(): HasMany
     {
         return $this->hasMany(Evento::class);
+    }
+
+    public function consignaciones(): HasMany
+    {
+        return $this->hasMany(Consignacion::class);
+    }
+
+    public function ventas(): HasMany
+    {
+        return $this->hasMany(Venta::class);
+    }
+
+    public function liquidaciones(): HasMany
+    {
+        return $this->hasMany(Liquidacion::class);
+    }
+
+    public function devoluciones(): HasMany
+    {
+        return $this->hasMany(Devolucion::class);
     }
 }
