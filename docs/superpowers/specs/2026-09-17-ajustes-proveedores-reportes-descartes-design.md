@@ -59,16 +59,16 @@ El método `down()` explicará que restaurar liquidaciones requiere recuperar un
 
 ### Datos
 
-La tabla `inventory_adjustments` contendrá:
+La tabla `ajustes_inventario` representa cada corrección manual y auditada del saldo físico de un lote. Contendrá:
 
 - `id`;
-- `lot_id`, referencia restringida al lote;
-- `created_by` y `updated_by`, referencias restringidas a usuarios;
-- `quantity_before`, `quantity_after` y `delta`, enteros;
-- `reason_type`: error de conteo, daño, remanente u otro;
-- `reason`, detalle obligatorio;
-- `status`: activo o anulado;
-- `voided_by`, `voided_at` y `void_reason`, opcionales;
+- `lote_id`, referencia restringida al lote;
+- `creado_por` y `actualizado_por`, referencias restringidas a usuarios;
+- `cantidad_anterior`, `cantidad_nueva` y `diferencia`, enteros;
+- `tipo_motivo`: error de conteo, daño, remanente u otro;
+- `motivo`, detalle obligatorio;
+- `estado`: activo o anulado;
+- `anulado_por`, `anulado_en` y `motivo_anulacion`, opcionales;
 - timestamps.
 
 Se indexarán lote, estado, motivo, creador y fecha. El modelo expondrá relaciones al lote, presentación, proveedor y responsables.
@@ -127,19 +127,19 @@ Los filtros del gráfico se integrarán con los filtros existentes del reporte p
 
 ### Datos
 
-La tabla `product_discards` contendrá:
+La tabla `descartes_productos` representa cada baja controlada de mercancía por caducidad, daño, deterioro u otra causa. Contendrá:
 
 - `id` y número de referencia derivado del ID;
-- `lot_id`, referencia restringida al lote;
-- `created_by` y `updated_by`, referencias restringidas a usuarios;
-- `quantity`, entero positivo;
-- `expiration_date`, copia de la fecha del lote;
-- `unit_cost`, copia del precio de acopio al registrar;
-- `total_loss`, decimal exacto calculado al registrar;
-- `reason_type`: caducado, dañado, deterioro u otro;
-- `notes`, opcional;
-- `status`: pendiente o procesado;
-- `processed_by` y `processed_at`, opcionales;
+- `lote_id`, referencia restringida al lote;
+- `creado_por` y `actualizado_por`, referencias restringidas a usuarios;
+- `cantidad`, entero positivo;
+- `fecha_caducidad`, copia de la fecha del lote;
+- `costo_unitario`, copia del precio de acopio al registrar;
+- `perdida_total`, decimal exacto calculado al registrar;
+- `tipo_motivo`: caducado, dañado, deterioro u otro;
+- `notas`, opcional;
+- `estado`: pendiente o procesado;
+- `procesado_por` y `procesado_en`, opcionales;
 - timestamps.
 
 Se indexarán lote, estado, motivo, fecha de caducidad, fecha de creación y responsables. Producto, presentación y proveedor se obtendrán mediante el lote, evitando duplicar claves y permitir combinaciones inconsistentes.
@@ -178,8 +178,8 @@ No se redondearán cantidades inválidas, no se aceptarán identificadores de pr
 Las migraciones nuevas se ejecutarán después de las migraciones ya existentes. El orden será:
 
 1. eliminar liquidaciones y normalizar estados;
-2. crear `inventory_adjustments`;
-3. crear `product_discards`;
+2. crear `ajustes_inventario`;
+3. crear `descartes_productos`;
 4. añadir índices adicionales solamente si no existen.
 
 La base instalada y `migrate:fresh` deberán terminar con el mismo esquema. El volcado SQL de referencia se actualizará al finalizar.
@@ -208,8 +208,8 @@ La verificación final incluirá PHPUnit, pruebas JavaScript, Pint sobre archivo
 Se actualizarán el changelog y la guía del sistema. El diagrama ER documentará:
 
 ```text
-users ──< inventory_adjustments >── ingresos_productores_items
-users ──< product_discards      >── ingresos_productores_items
+users ──< ajustes_inventario  >── ingresos_productores_items
+users ──< descartes_productos >── ingresos_productores_items
                                       │
                                       ├── presentaciones ── productos
                                       └── ingresos_productores ── productores
