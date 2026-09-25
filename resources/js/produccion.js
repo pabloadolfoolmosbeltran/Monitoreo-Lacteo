@@ -1,10 +1,8 @@
-// ============================================================
-// PRODUCCION.JS - Cálculo dinámico de cuajo/stock
-// Espera window.produccionData (Array de productos) definido
-// por la vista antes de cargar este script.
-// ============================================================
+import { requiredRennet, rennetReferences } from './rennet-recommendation';
 
-document.addEventListener('DOMContentLoaded', function () {
+// Cálculo dinámico de la recomendación de cuajo.
+
+function initializeProductionForm() {
     const selectProducto = document.getElementById('select-producto');
     const inputLitros = document.getElementById('input-cantidad-leche');
     const inputTempObj = document.getElementById('input-temperatura-objetivo');
@@ -12,11 +10,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const contenedorInfo = document.getElementById('info-lote-dinamico');
     const alertaProducto = document.getElementById('alerta-producto');
-    const alertaStock = document.getElementById('alerta-stock-insuficiente');
-    const btnSubmit = document.getElementById('btn-iniciar-produccion');
+    const productosData = obtenerProductosDesdeVista();
 
-    const productosData = window.produccionData || [];
-
+    // APUNTE:
+    // El cálculo en pantalla ayuda al usuario antes de enviar el formulario.
+    // La validación definitiva se repite en ProduccionController::iniciar().
     function calcularInsumos() {
         if (!selectProducto) return;
 
@@ -62,42 +60,43 @@ document.addEventListener('DOMContentLoaded', function () {
                     alertaProducto.style.display = 'none';
                 }
 
-                // 5. Variables de cálculo de cuajo
                 const factorCuajo = parseFloat(producto.cuajo_por_litro) || 0;
-                const stockActual = parseFloat(producto.stock_cuajo) || 0;
                 const unidad = producto.unidad_cuajo || 'ml';
                 const tipoCuajo = producto.tipo_cuajo || 'No especificado';
+                const totalRecomendado = requiredRennet(litros, factorCuajo);
 
-                const totalAGastar = litros * factorCuajo;
-                const stockRestante = stockActual - totalAGastar;
-
-                // 6. Inyección de valores en la vista
                 document.getElementById('tipo-cuajo-val').innerText = tipoCuajo;
                 document.getElementById('dosis-cuajo-val').innerText = `${factorCuajo} ${unidad}/L`;
-                document.getElementById('resultado-cuajo').innerText = totalAGastar.toFixed(2);
-                document.getElementById('stock-actual-val').innerText = stockActual.toFixed(2);
-                // Actualizar inputs ocultos que van hacia la base de datos
-                document.getElementById('input-hidden-tipo-cuajo').value = tipoCuajo;
-                document.getElementById('input-hidden-cantidad-cuajo').value = totalAGastar.toFixed(2);
-                const elStockRestante = document.getElementById('stock-restante-val');
-                elStockRestante.innerText = stockRestante.toFixed(2);
+                document.getElementById('resultado-cuajo').innerText = totalRecomendado.toFixed(2);
+                document.getElementById('referencias-cuajo').replaceChildren(
+                    ...rennetReferences(factorCuajo).map(reference => {
+                        const item = document.createElement('span');
+                        item.className = 'badge text-bg-light border';
+                        item.innerText = `${reference.liters} L: ${reference.amount.toFixed(2)} ${unidad}`;
+                        return item;
+                    }),
+                );
 
                 document.querySelectorAll('.unidad-cuajo-val').forEach(el => el.innerText = unidad);
-
-                // 7. Validación de Stock e Indicador de Alerta
-                if (totalAGastar > stockActual && litros > 0) {
-                    alertaStock.style.display = 'block';
-                    elStockRestante.className = 'fw-bold fs-5 text-danger';
-                    if (btnSubmit) btnSubmit.classList.add('disabled');
-                } else {
-                    alertaStock.style.display = 'none';
-                    elStockRestante.className = 'fw-bold fs-5 text-success';
-                    if (btnSubmit) btnSubmit.classList.remove('disabled');
-                }
             }
         } else {
             contenedorInfo.style.display = 'none';
             tempHelp.style.display = 'none';
+        }
+    }
+
+    function obtenerProductosDesdeVista() {
+        const dataNode = document.getElementById('produccion-data');
+
+        if (!dataNode?.dataset.productos) {
+            return [];
+        }
+
+        try {
+            return JSON.parse(dataNode.dataset.productos);
+        } catch (error) {
+            console.error('No se pudieron leer los productos de la vista:', error);
+            return [];
         }
     }
 
@@ -114,4 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
             calcularInsumos();
         }
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', initializeProductionForm);
+document.addEventListener('app:content-loaded', initializeProductionForm);

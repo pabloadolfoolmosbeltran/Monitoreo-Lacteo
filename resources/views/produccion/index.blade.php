@@ -1,12 +1,11 @@
 @extends('layouts.app')
 
-@push('styles')
-@vite(['resources/css/produccion.css'])
-@endpush
 
 @section('content')
 
 <div class="container dairy-production-container pt-3">
+    <div id="produccion-data" data-productos='@json($productos)'></div>
+
     <h2 class="mb-4 fw-bold" style="color: var(--turquoise-primary);">
         🥛 Producción
     </h2>
@@ -36,7 +35,7 @@
     @if($produccionActiva)
     @php
         $factorCuajo = (float)($produccionActiva->producto->cuajo_por_litro ?? 0);
-        $totalCuajoCalculado = $produccionActiva->cantidad_leche * $factorCuajo;
+        $totalCuajoCalculado = $produccionActiva->cantidad_cuajo ?? ($produccionActiva->cantidad_leche * $factorCuajo);
         $unidadCuajo = $produccionActiva->producto->unidad_cuajo ?? 'ml';
         $tipoCuajo = $produccionActiva->producto->tipo_cuajo ?? 'Insumo/Cuajo';
     @endphp
@@ -50,8 +49,8 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <p class="mb-2">
-                        <strong style="color: var(--text-muted);">Productor responsable:</strong><br>
-                        <span class="fw-semibold text-dark">{{ $produccionActiva->user?->nombre_unidad_productiva ?? $produccionActiva->user?->name }}</span>
+                        <strong style="color: var(--text-muted);">Operador responsable:</strong><br>
+                        <span class="fw-semibold text-dark">{{ $produccionActiva->user?->name }}</span>
                     </p>
                     <p class="mb-2">
                         <strong style="color: var(--text-muted);">Producto:</strong><br>
@@ -81,7 +80,7 @@
                 </div>
             </div>
 
-            <!-- DETALLE DE INSUMO/CUAJO UTILIZADO -->
+            <!-- RECOMENDACIÓN DE INSUMO/CUAJO -->
             <div class="mt-3 p-3 rounded-3 border shadow-sm" style="background-color: var(--milk-bg); border-color: var(--border-soft) !important;">
                 <div class="d-flex align-items-center">
                     <div class="me-3 text-center">
@@ -89,7 +88,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <span class="d-block text-uppercase fw-semibold" style="color: var(--text-muted); font-size: 0.75rem;">
-                            Insumo / Cuajo Aplicado y Descontado:
+                            Recomendación de cuajo para este lote:
                         </span>
                         <div class="d-flex align-items-baseline gap-2 flex-wrap">
                             <span class="fw-bold fs-4 text-dark">
@@ -116,7 +115,7 @@
 
             <hr style="border-color: var(--border-soft);">
 
-            <form action="{{ url('/produccion/finalizar') }}" method="POST">
+            <form action="{{ url('/produccion/finalizar') }}" method="POST" data-async-action>
                 @csrf
                 <button type="submit" class="btn btn-industrial btn-industrial-danger shadow-sm">
                     Finalizar Producción
@@ -131,25 +130,21 @@
             <h5 class="mb-0 fw-bold" style="color: var(--turquoise-primary);">Nueva Producción</h5>
         </div>
         <div class="card-body p-4">
-            <form action="{{ url('/produccion/iniciar') }}" method="POST">
+            <form action="{{ url('/produccion/iniciar') }}" method="POST" data-async-action>
                 @csrf
 
-                <!-- Campos ocultos para enviar tipo y cantidad de cuajo calculados -->
-                <input type="hidden" name="tipo_cuajo" id="input-hidden-tipo-cuajo" value="">
-                <input type="hidden" name="cantidad_cuajo" id="input-hidden-cantidad-cuajo" value="">
-                
                 <div class="mb-3">
                     <label class="form-label fw-semibold" style="color: var(--text-muted);">
-                        Productor responsable
+                        Operador responsable
                     </label>
                     @if(isset($usuario) && $usuario->rol == 'Administrador')
                         <select name="user_id" class="form-select shadow-sm" required>
-                            <option value="">Seleccione un usuario/productor</option>
+                            <option value="">Seleccione un operador</option>
                             @foreach($users as $user)
                             <option
                                 value="{{ $user->id }}"
                                 {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->nombre_unidad_productiva ?? $user->name }} ({{ $user->rol }})
+                                {{ $user->name }} ({{ $user->rol }})
                             </option>
                             @endforeach
                         </select>
@@ -157,7 +152,7 @@
                         <input
                             type="text"
                             class="form-control bg-light shadow-sm"
-                            value="{{ ($usuario->nombre_unidad_productiva ?? $usuario->name) ?? '' }}"
+                            value="{{ $usuario->name ?? '' }}"
                             readonly>
                         <input
                             type="hidden"
@@ -229,44 +224,35 @@
                                 <i class="bi bi-info-circle-fill me-1"></i> <strong>Aviso Importante:</strong> <span id="texto-alerta"></span>
                             </div>
 
-                            <!-- Alerta de Stock Insuficiente -->
-                            <div id="alerta-stock-insuficiente" class="alert alert-danger py-2 mb-2 shadow-sm" style="display: none; font-size: 0.85rem;">
-                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>¡Atención!</strong> El stock actual de cuajo es insuficiente para procesar esta cantidad de leche.
-                            </div>
-
                             <div class="p-3 bg-white border rounded shadow-sm">
                                 <!-- Información Técnica y Térmica -->
                                 <div class="row text-muted small mb-2 border-bottom pb-2">
-                                    <div class="col-6 col-md-3">
+                                    <div class="col-6 col-md-4">
                                         <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Tipo Cuajo:</span>
                                         <span id="tipo-cuajo-val" class="fw-bold text-dark fs-6">-</span>
                                     </div>
-                                    <div class="col-6 col-md-3">
+                                    <div class="col-6 col-md-4">
                                         <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Dosis Requerida:</span>
                                         <span id="dosis-cuajo-val" class="fw-bold text-dark fs-6">-</span>
                                     </div>
-                                    <div class="col-6 col-md-3 mt-2 mt-md-0">
+                                    <div class="col-12 col-md-4 mt-2 mt-md-0">
                                         <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Rango Temp:</span>
                                         <span id="rango-temp-val" class="fw-bold text-dark fs-6">-</span>
                                     </div>
-                                    <div class="col-6 col-md-3 mt-2 mt-md-0">
-                                        <span class="d-block text-uppercase fw-semibold" style="font-size: 0.72rem;">Stock Actual:</span>
-                                        <span id="stock-actual-val" class="fw-bold text-primary fs-6">0</span> <span class="unidad-cuajo-val fw-bold text-primary">ml</span>
-                                    </div>
                                 </div>
 
-                                <!-- Proyección de Consumo -->
+                                <!-- Recomendación para el volumen ingresado -->
                                 <div class="d-flex justify-content-between align-items-center flex-wrap pt-1">
                                     <div>
-                                        <span class="text-muted d-block mb-1" style="font-size: 0.85rem;">Cuajo Total a Gastar:</span>
+                                        <span class="text-muted d-block mb-1" style="font-size: 0.85rem;">Cuajo recomendado:</span>
                                         <h4 class="mb-0 text-dark">
                                             <span id="resultado-cuajo" class="text-danger fw-bold">0</span> <span class="unidad-cuajo-val text-danger fw-bold">ml</span>
                                         </h4>
                                         <small class="text-muted">Para <span id="litros-ingresados" class="fw-semibold">0</span> litros en tina</small>
                                     </div>
-                                    <div class="text-md-end mt-2 mt-md-0 bg-light p-2 rounded border">
-                                        <span class="text-muted d-block small fw-semibold">Stock Proyectado Tras Proceso:</span>
-                                        <span id="stock-restante-val" class="fw-bold fs-5 text-success">0</span> <span class="unidad-cuajo-val fw-bold text-success">ml</span>
+                                    <div class="mt-3 mt-md-0 bg-light p-2 rounded border">
+                                        <span class="text-muted d-block small fw-semibold mb-2">Referencias rápidas</span>
+                                        <div id="referencias-cuajo" class="d-flex flex-wrap gap-1"></div>
                                     </div>
                                 </div>
                             </div>
@@ -294,10 +280,4 @@
 
 </div>
 
-@push('scripts')
-<script>
-    window.produccionData = @json($productos);
-</script>
-@vite(['resources/js/produccion.js'])
-@endpush
 @endsection

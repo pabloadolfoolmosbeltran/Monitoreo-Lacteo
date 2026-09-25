@@ -57,7 +57,7 @@
                         </td>
                         <td>
                             @if(!$alerta->atendida)
-                                <form action="{{ route('alertas.atender', $alerta->id) }}" method="POST" class="d-inline">
+                                <form action="{{ route('alertas.atender', $alerta->id) }}" method="POST" class="d-inline" data-async-action>
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="btn btn-sm btn-success">

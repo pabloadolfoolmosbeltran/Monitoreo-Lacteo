@@ -105,17 +105,6 @@
         value="{{ old('direccion', $usuario->direccion ?? '') }}">
 </div>
 
-<div class="mb-3">
-    <label class="form-label">
-        Unidad Productiva
-    </label>
-    <input
-        type="text"
-        name="nombre_unidad_productiva"
-        class="form-control"
-        value="{{ old('nombre_unidad_productiva', $usuario->nombre_unidad_productiva ?? '') }}">
-</div>
-
 @if ($errors->any())
 <div class="alert alert-danger">
     <ul class="mb-0">

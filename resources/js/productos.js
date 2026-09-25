@@ -1,10 +1,12 @@
-// ============================================================
-// PRODUCTOS.JS - Lógica del CRUD de productos
-// (Se cargan las funciones base; la lógica específica se añade aquí)
-// ============================================================
+function initializeProductForms() {
+    const productNameInputs = document.querySelectorAll('.js-product-name');
 
-document.addEventListener('DOMContentLoaded', function () {
-    // Punto de entrada para el CRUD de productos.
-    // Actualmente los formularios usan validación de atributos HTML
-    // y confirmaciones nativas, por lo que no se requiere lógica extra.
-});
+    productNameInputs.forEach((input) => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^a-zA-ZÀ-ÿñÑ0-9\s]/g, '');
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initializeProductForms);
+document.addEventListener('app:content-loaded', initializeProductForms);

@@ -1,10 +1,40 @@
 @extends('layouts.app')
 
-@push('styles')
-@vite(['resources/css/dashboard.css'])
-@endpush
 
 @section('content')
+
+@if(auth()->check() && in_array(auth()->user()->rol, ['Administrador', 'Trabajador']))
+<section class="commercial-dashboard mb-4" aria-labelledby="commercial-dashboard-title">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <p class="text-uppercase text-success fw-bold small mb-1">Operación rápida</p>
+            <h2 id="commercial-dashboard-title" class="h4 mb-0">Acopio y ventas</h2>
+        </div>
+        <span class="badge rounded-pill text-bg-light border">Existencia trazable por lote · Bs.</span>
+    </div>
+    <div class="row g-3">
+        @foreach([
+            ['route' => route('pos.index'), 'icon' => 'bi-cart3', 'label' => 'Ventas', 'help' => 'Carrito y cobro rápido'],
+            ['route' => route('ingresos-productores.index'), 'icon' => 'bi-box-arrow-in-down', 'label' => 'Entradas', 'help' => 'Registrar inventario recibido'],
+            ['route' => route('productores.index'), 'icon' => 'bi-person-vcard', 'label' => 'Proveedores', 'help' => 'Directorio independiente'],
+            ['route' => route('inventario.index'), 'icon' => 'bi-boxes', 'label' => 'Inventario por Lote', 'help' => 'Existencias, caducidad y ajustes'],
+            ['route' => route('reportes-comerciales.index'), 'icon' => 'bi-file-earmark-bar-graph', 'label' => 'Reportes de Ventas', 'help' => 'Vista, PDF y Excel'],
+        ] as $action)
+            <div class="col-12 col-sm-6 col-xl">
+                <a href="{{ $action['route'] }}" class="commercial-dashboard-action">
+                    <i class="bi {{ $action['icon'] }}"></i>
+                    <span><strong>{{ $action['label'] }}</strong><small>{{ $action['help'] }}</small></span>
+                    <i class="bi bi-chevron-right ms-auto"></i>
+                </a>
+            </div>
+        @endforeach
+    </div>
+</section>
+@endif
+
+<div id="dashboard-config"
+     data-dashboard-url="{{ route('dashboard.datos') }}"
+     data-temperaturas-url="{{ route('dashboard.temperaturas') }}"></div>
 
 <div class="row">
     <div class="col-md-4 mb-3">
@@ -74,7 +104,7 @@
                     <h5>Cuajo Necesario</h5>
                     <h2 id="valCantidadCuajo">
                         @if($produccion && strtolower($produccion->estado) == 'en proceso')
-                            {{ ($produccion->cantidad_leche ?? $produccion->litros ?? 0) * ($produccion->producto->cuajo_por_litro ?? 0) }} ml
+                            {{ number_format((float) ($produccion->cantidad_cuajo ?? 0), 2) }} {{ $produccion->producto?->unidad_cuajo ?? 'ml' }}
                         @else
                             --
                         @endif
@@ -292,7 +322,7 @@
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-danger btn-lg px-4" data-bs-dismiss="modal" onclick="silenciarAlarma()">Entendido / Silenciar</button>
+                <button type="button" class="btn btn-danger btn-lg px-4" data-bs-dismiss="modal" data-silenciar-alarma>Entendido / Silenciar</button>
             </div>
         </div>
     </div>
@@ -313,7 +343,7 @@
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-success btn-lg px-4" data-bs-dismiss="modal" onclick="silenciarAlarma()">Entendido / Silenciar</button>
+                <button type="button" class="btn btn-success btn-lg px-4" data-bs-dismiss="modal" data-silenciar-alarma>Entendido / Silenciar</button>
             </div>
         </div>
     </div>
@@ -329,7 +359,7 @@
             <div class="card-body text-center">
                 <h2 id="panelAlertaMensaje" class="fw-bold text-danger mb-3">--</h2>
                 <p id="panelAlertaDetalle" class="lead">Atención requerida en el proceso.</p>
-                <button type="button" class="btn btn-danger btn-lg px-5" onclick="aceptarAlertaPanel()">
+                <button type="button" class="btn btn-danger btn-lg px-5" data-aceptar-alerta-panel>
                     ✅ Entendido / Aceptar
                 </button>
             </div>
@@ -337,8 +367,4 @@
     </div>
 </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-@vite(['resources/js/dashboard.js'])
-@endpush
 @endsection
