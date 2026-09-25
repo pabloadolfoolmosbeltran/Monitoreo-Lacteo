@@ -15,6 +15,9 @@ class Produccion extends Model
     public const ETAPA_PRODUCCION = 'Produccion';
     public const ETAPA_FINALIZADA = 'Finalizada';
 
+    // APUNTE:
+    // Produccion representa un lote elaborado. Desde este modelo se navega hacia
+    // su responsable, producto, dispositivo, lecturas de temperatura, alertas y bitácora.
     protected $table = 'producciones';
 
     protected $fillable = [

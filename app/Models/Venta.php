@@ -11,9 +11,12 @@ class Venta extends Model
 {
     use HasFactory;
 
+    protected $table = 'ventas';
+
     protected $fillable = [
-        'consignacion_item_id',
+        'ingreso_productor_item_id',
         'user_id',
+        'ticket_venta_id',
         'cantidad_vendida',
         'precio_unitario_venta',
         'fecha_venta',
@@ -21,7 +24,7 @@ class Venta extends Model
     ];
 
     protected $casts = [
-        'cantidad_vendida' => 'decimal:3',
+        'cantidad_vendida' => 'integer',
         'precio_unitario_venta' => 'decimal:2',
         'fecha_venta' => 'datetime',
     ];
@@ -31,9 +34,14 @@ class Venta extends Model
         'margen_obtenido',
     ];
 
-    public function consignacionItem(): BelongsTo
+    public function lote(): BelongsTo
     {
-        return $this->belongsTo(ConsignacionItem::class);
+        return $this->belongsTo(IngresoProductorItem::class, 'ingreso_productor_item_id');
+    }
+
+    public function ticket(): BelongsTo
+    {
+        return $this->belongsTo(TicketVenta::class, 'ticket_venta_id');
     }
 
     public function vendedor(): BelongsTo
@@ -48,11 +56,11 @@ class Venta extends Model
 
     public function getMargenObtenidoAttribute(): string
     {
-        $this->loadMissing('consignacionItem');
+        $this->loadMissing('lote');
 
         $margenUnitario = Decimal::sub(
             $this->precio_unitario_venta,
-            $this->consignacionItem->precio_productor,
+            $this->lote->precio_acopio_unitario,
             2
         );
 

@@ -22,6 +22,7 @@ class Presentacion extends Model
         'unidad',
         'precio',
         'stock',
+        'stock_minimo_alerta',
         'imagen_comercial',
         'con_fruta',
         'activo',
@@ -31,6 +32,7 @@ class Presentacion extends Model
         'precio' => 'decimal:2',
         'contenido' => 'decimal:2',
         'stock' => 'integer',
+        'stock_minimo_alerta' => 'integer',
         'con_fruta' => 'boolean',
         'activo' => 'boolean',
     ];
@@ -40,8 +42,8 @@ class Presentacion extends Model
         return $this->belongsTo(Producto::class);
     }
 
-    public function consignacionItems(): HasMany
+    public function lotes(): HasMany
     {
-        return $this->hasMany(ConsignacionItem::class);
+        return $this->hasMany(IngresoProductorItem::class, 'presentacion_id');
     }
 }

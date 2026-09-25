@@ -5,21 +5,32 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductoController extends Controller
 {
+    private const IMAGE_DIRECTORY = 'productos';
+
     /**
      * Mostrar todos los productos.
      */
     public function index(Request $request)
     {
-        $consulta = Producto::where('activo', true);
+        $request->validate([
+            'buscar' => 'nullable|string|max:100',
+            'estado' => 'nullable|in:eliminados',
+        ]);
+
+        $eliminados = $request->input('estado') === 'eliminados';
+        abort_if($eliminados && $request->user()?->rol !== 'Administrador', 403);
+
+        $consulta = Producto::where('activo', ! $eliminados);
 
         if ($request->filled('buscar')) {
             $consulta->where(
                 'nombre',
                 'like',
-                '%' . $request->buscar . '%'
+                '%'.$request->buscar.'%'
             );
         }
 
@@ -30,7 +41,7 @@ class ProductoController extends Controller
 
         return view(
             'productos.index',
-            compact('productos')
+            compact('productos', 'eliminados')
         );
     }
 
@@ -47,49 +58,11 @@ class ProductoController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => [
-                'required',
-                'string',
-                'max:100',
-                'unique:productos,nombre',
-                'regex:/^[a-zA-ZÀ-ÿñÑ0-9\s]+$/',
-            ],
-            'tipo_cuajo' => 'nullable|string|max:100|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]+$/',
-            'imagen_referencial' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'unidad_cuajo' => 'nullable|string|in:ml,g,pastilla,gotas',
-            'stock_cuajo' => 'nullable|numeric|min:0',
-            'cuajo_por_litro' => 'nullable|numeric|min:0',
-            'temperatura_minima' => 'required|numeric',
-            'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
-            'temperatura_pasteurizacion' => 'required|numeric',
-            'instrucciones' => 'nullable|string',
-            'descripcion' => 'nullable|string|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]*$/',
-        ], [
-            'nombre.regex' => 'El nombre no puede contener caracteres especiales.',
-            'descripcion.regex' => 'La descripción contiene caracteres no permitidos.',
-        ]);
+        $datos = $this->validarProducto($request);
+        $datos['imagen_referencial'] = $this->guardarImagenReferencial($request);
+        $datos['activo'] = $request->boolean('activo');
 
-        // Procesar imagen referencial si existe
-        $imagenPath = null;
-        if ($request->hasFile('imagen_referencial')) {
-            $imagenPath = $request->file('imagen_referencial')->store('productos', 'public');
-        }
-
-        Producto::create([
-            'nombre' => $request->nombre,
-            'tipo_cuajo' => $request->tipo_cuajo,
-            'imagen_referencial' => $imagenPath,
-            'cuajo_por_litro' => $request->cuajo_por_litro,
-            'unidad_cuajo' => $request->unidad_cuajo ?? 'ml',
-            'stock_cuajo' => $request->stock_cuajo ?? 0,
-            'temperatura_minima' => $request->temperatura_minima,
-            'temperatura_maxima' => $request->temperatura_maxima,
-            'temperatura_pasteurizacion' => $request->temperatura_pasteurizacion,
-            'instrucciones' => $request->instrucciones,
-            'descripcion' => $request->descripcion,
-            'activo' => $request->has('activo'),
-        ]);
+        Producto::create($datos);
 
         return redirect('/productos')
             ->with('success', 'Producto registrado correctamente.');
@@ -111,52 +84,11 @@ class ProductoController extends Controller
      */
     public function update(Request $request, Producto $producto)
     {
-        $request->validate([
-            'nombre' => [
-                'required',
-                'string',
-                'max:100',
-                'unique:productos,nombre,' . $producto->id,
-                'regex:/^[a-zA-ZÀ-ÿñÑ0-9\s]+$/',
-            ],
-            'tipo_cuajo' => 'nullable|string|max:100|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]+$/',
-            'imagen_referencial' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
-            'unidad_cuajo' => 'nullable|string|in:ml,g,pastilla,gotas',
-            'stock_cuajo' => 'nullable|numeric|min:0',
-            'cuajo_por_litro' => 'nullable|numeric|min:0',
-            'temperatura_minima' => 'required|numeric',
-            'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
-            'temperatura_pasteurizacion' => 'required|numeric',
-            'instrucciones' => 'nullable|string',
-            'descripcion' => 'nullable|string|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]*$/',
-        ], [
-            'nombre.regex' => 'El nombre no puede contener caracteres especiales.',
-            'descripcion.regex' => 'La descripción contiene caracteres no permitidos.',
-        ]);
+        $datos = $this->validarProducto($request, $producto);
+        $datos['imagen_referencial'] = $this->guardarImagenReferencial($request, $producto);
+        $datos['activo'] = $request->boolean('activo');
 
-        // Procesar nueva imagen si se sube
-        $imagenPath = $producto->imagen_referencial;
-        if ($request->hasFile('imagen_referencial')) {
-            if ($producto->imagen_referencial && Storage::disk('public')->exists($producto->imagen_referencial)) {
-                Storage::disk('public')->delete($producto->imagen_referencial);
-            }
-            $imagenPath = $request->file('imagen_referencial')->store('productos', 'public');
-        }
-
-        $producto->update([
-            'nombre' => $request->nombre,
-            'tipo_cuajo' => $request->tipo_cuajo,
-            'imagen_referencial' => $imagenPath,
-            'cuajo_por_litro' => $request->cuajo_por_litro,
-            'unidad_cuajo' => $request->unidad_cuajo ?? 'ml',
-            'stock_cuajo' => $request->stock_cuajo ?? 0,
-            'temperatura_minima' => $request->temperatura_minima,
-            'temperatura_maxima' => $request->temperatura_maxima,
-            'temperatura_pasteurizacion' => $request->temperatura_pasteurizacion,
-            'instrucciones' => $request->instrucciones,
-            'descripcion' => $request->descripcion,
-            'activo' => $request->has('activo'),
-        ]);
+        $producto->update($datos);
 
         return redirect('/productos')
             ->with('success', 'Producto actualizado correctamente.');
@@ -175,5 +107,65 @@ class ProductoController extends Controller
                 'success',
                 'Producto desactivado correctamente.'
             );
+    }
+
+    public function restore(Request $request, Producto $producto)
+    {
+        abort_unless($request->user()?->rol === 'Administrador', 403);
+
+        $producto->update(['activo' => true]);
+
+        return redirect('/productos?estado=eliminados')
+            ->with('success', 'Producto restablecido correctamente.');
+    }
+
+    // APUNTE:
+    // Store y update comparten las mismas reglas. Centralizarlas evita que un
+    // campo se valide distinto al crear y al editar el producto.
+    private function validarProducto(Request $request, ?Producto $producto = null): array
+    {
+        $nombreUnico = Rule::unique('productos', 'nombre');
+
+        if ($producto) {
+            $nombreUnico->ignore($producto);
+        }
+
+        $datos = $request->validate([
+            'nombre' => [
+                'required',
+                'string',
+                'max:100',
+                $nombreUnico,
+                'regex:/^[a-zA-ZÀ-ÿñÑ0-9\s]+$/',
+            ],
+            'tipo_cuajo' => 'nullable|string|max:100|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]+$/',
+            'imagen_referencial' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'unidad_cuajo' => 'nullable|string|in:ml,g,kg,gotas,pastilla',
+            'cuajo_por_litro' => 'nullable|numeric|min:0',
+            'temperatura_minima' => 'required|numeric',
+            'temperatura_maxima' => 'required|numeric|gt:temperatura_minima',
+            'temperatura_pasteurizacion' => 'required|numeric',
+            'descripcion' => 'nullable|string|regex:/^[a-zA-ZÀ-ÿñÑ0-9\s\.\,\-]*$/',
+        ], [
+            'nombre.regex' => 'El nombre no puede contener caracteres especiales.',
+            'descripcion.regex' => 'La descripción contiene caracteres no permitidos.',
+        ]);
+
+        $datos['unidad_cuajo'] = $datos['unidad_cuajo'] ?? 'ml';
+
+        return $datos;
+    }
+
+    private function guardarImagenReferencial(Request $request, ?Producto $producto = null): ?string
+    {
+        if (! $request->hasFile('imagen_referencial')) {
+            return $producto?->imagen_referencial;
+        }
+
+        if ($producto?->imagen_referencial && Storage::disk('public')->exists($producto->imagen_referencial)) {
+            Storage::disk('public')->delete($producto->imagen_referencial);
+        }
+
+        return $request->file('imagen_referencial')->store(self::IMAGE_DIRECTORY, 'public');
     }
 }

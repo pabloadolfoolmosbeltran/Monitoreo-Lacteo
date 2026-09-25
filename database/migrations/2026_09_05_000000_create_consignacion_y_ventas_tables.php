@@ -24,10 +24,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('consignacion_id')->constrained('consignaciones')->restrictOnDelete();
             $table->foreignId('presentacion_id')->constrained('presentaciones')->restrictOnDelete();
-            $table->decimal('cantidad_recibida', 10, 3);
-            $table->decimal('cantidad_disponible', 10, 3);
+            $table->unsignedInteger('cantidad_recibida');
+            $table->unsignedInteger('cantidad_disponible');
             $table->decimal('precio_productor', 10, 2);
             $table->decimal('precio_venta', 10, 2);
+            $table->date('fecha_recepcion')->nullable();
+            $table->date('fecha_caducidad')->nullable();
             $table->timestamps();
 
             $table->index(['consignacion_id', 'presentacion_id']);
@@ -37,7 +39,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('consignacion_item_id')->constrained('consignacion_items')->restrictOnDelete();
             $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
-            $table->decimal('cantidad_vendida', 10, 3);
+            $table->unsignedInteger('cantidad_vendida');
             $table->decimal('precio_unitario_venta', 10, 2);
             $table->timestamp('fecha_venta')->useCurrent();
             $table->text('observaciones')->nullable();
@@ -56,26 +58,11 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('devoluciones', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('consignacion_item_id')->constrained('consignacion_items')->restrictOnDelete();
-            $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
-            $table->decimal('cantidad_devuelta', 10, 3);
-            $table->decimal('precio_unitario_venta', 10, 2);
-            $table->timestamp('fecha_devolucion')->useCurrent();
-            $table->enum('tipo', ['parcial', 'total']);
-            $table->text('observaciones')->nullable();
-            $table->timestamps();
-
-            $table->index(['consignacion_item_id', 'fecha_devolucion']);
-        });
-
         $this->addCheckConstraints();
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('devoluciones');
         Schema::dropIfExists('liquidaciones');
         Schema::dropIfExists('ventas');
         Schema::dropIfExists('consignacion_items');
@@ -94,6 +81,5 @@ return new class extends Migration
         DB::statement('ALTER TABLE ventas ADD CONSTRAINT chk_ventas_cantidad_pos CHECK (cantidad_vendida > 0)');
         DB::statement('ALTER TABLE ventas ADD CONSTRAINT chk_ventas_precio_pos CHECK (precio_unitario_venta >= 0)');
         DB::statement('ALTER TABLE liquidaciones ADD CONSTRAINT chk_liquidaciones_monto_pos CHECK (monto_liquidado >= 0)');
-        DB::statement('ALTER TABLE devoluciones ADD CONSTRAINT chk_devoluciones_cantidad_pos CHECK (cantidad_devuelta > 0)');
     }
 };

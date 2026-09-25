@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Auth;
 
 class EventoService
 {
+    // APUNTE:
+    // La bitácora del sistema se alimenta desde aquí. Los controladores no crean
+    // eventos directamente: llaman a este servicio para dejar registrado qué
+    // ocurrió, cuándo ocurrió y con qué producción estuvo relacionado.
     public static function registrar(
         ?int $produccionId,
         string $tipo,

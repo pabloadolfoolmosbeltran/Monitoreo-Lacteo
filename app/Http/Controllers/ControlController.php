@@ -3,111 +3,121 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actuador;
-use App\Models\Sensor;
 use App\Models\Produccion;
+use App\Models\Sensor;
+use App\Services\ActuadorService;
 use App\Services\EventoService;
 use Illuminate\Http\Request;
 
 class ControlController extends Controller
 {
+    public function __construct(private readonly ActuadorService $actuadores)
+    {
+    }
+
     public function index()
     {
-        $motor = Actuador::where('tipo', 'Motor')->first();
-        $ventilador = Actuador::where('tipo', 'Ventilador')->first();
+        $motor = Actuador::where('tipo', ActuadorService::MOTOR)->first();
+        $ventilador = Actuador::where('tipo', ActuadorService::VENTILADOR)->first();
         $sensor = Sensor::first();
 
         return view('control.index', compact('motor', 'ventilador', 'sensor'));
     }
 
-    public function motor($estado)
+    public function motor(string $estado)
     {
-        $motor = Actuador::where('tipo', 'Motor')->first();
-
-        if ($motor) {
-            $motor->estado = ($estado == 'on');
-            $motor->modo = 'Manual';
-            $motor->save();
-
-            $produccion = Produccion::where('estado', 'En proceso')->first();
-
-            EventoService::registrar(
-                $produccion?->id,
-                'Motor',
-                $estado == 'on'
-                    ? 'Motor encendido manualmente.'
-                    : 'Motor apagado manualmente.'
-            );
-        }
-
-        return redirect('/control')
-            ->with('success', 'Motor actualizado correctamente.');
+        return $this->actualizarActuadorManual(
+            ActuadorService::MOTOR,
+            $estado,
+            'Motor actualizado correctamente.'
+        );
     }
 
-    public function ventilador($estado)
+    public function ventilador(string $estado)
     {
-        $ventilador = Actuador::where('tipo', 'Ventilador')->first();
-
-        if ($ventilador) {
-            $ventilador->estado = ($estado == 'on');
-            $ventilador->modo = 'Manual';
-            $ventilador->save();
-
-            $produccion = Produccion::where('estado', 'En proceso')->first();
-
-            EventoService::registrar(
-                $produccion?->id,
-                'Ventilador',
-                $estado == 'on'
-                    ? 'Ventilador encendido manualmente.'
-                    : 'Ventilador apagado manualmente.'
-            );
-        }
-
-        return redirect('/control')
-            ->with('success', 'Ventilador actualizado correctamente.');
+        return $this->actualizarActuadorManual(
+            ActuadorService::VENTILADOR,
+            $estado,
+            'Ventilador actualizado correctamente.'
+        );
     }
 
-    public function sensor($estado)
+    public function sensor(string $estado)
     {
+        $estadoSensor = match (strtolower($estado)) {
+            'on' => 'Activo',
+            'off' => 'Inactivo',
+            default => null,
+        };
+
+        if ($estadoSensor === null) {
+            return redirect('/control')->with('error', 'Estado de sensor no válido.');
+        }
+
         $sensor = Sensor::first();
 
-        if ($sensor) {
-            $sensor->estado = ($estado == 'on') ? 'Activo' : 'Inactivo';
-            $sensor->save();
-
-            $produccion = Produccion::where('estado', 'En proceso')->first();
-
-            EventoService::registrar(
-                $produccion?->id,
-                'Sensor',
-                $estado == 'on'
-                    ? 'Sensor activado.'
-                    : 'Sensor desactivado.'
-            );
+        if (! $sensor) {
+            return redirect('/control')->with('error', 'No existe un sensor registrado.');
         }
+
+        $sensor->update(['estado' => $estadoSensor]);
+        $produccion = $this->produccionActiva();
+
+        EventoService::registrar(
+            $produccion?->id,
+            'Sensor',
+            $estadoSensor === 'Activo' ? 'Sensor activado.' : 'Sensor desactivado.'
+        );
 
         return redirect('/control')
             ->with('success', 'Sensor actualizado correctamente.');
     }
 
-    public function cambiarModo(Request $request, $tipo)
+    public function cambiarModo(Request $request, string $tipo)
     {
-        $actuador = Actuador::where('tipo', $tipo)->first();
+        if (! ActuadorService::esTipoValido($tipo)) {
+            return redirect('/control')->with('error', 'Tipo de actuador no válido.');
+        }
 
-        if ($actuador) {
-            $actuador->modo = $request->has('modo') ? 'Automatico' : 'Manual';
-            $actuador->save();
+        $actualizado = $this->actuadores->cambiarModo(
+            $tipo,
+            $request->boolean('modo'),
+            $this->produccionActiva()?->id
+        );
 
-            $produccion = Produccion::where('estado', 'En proceso')->first();
-
-            EventoService::registrar(
-                $produccion?->id,
-                $tipo,
-                "{$tipo} cambiado a modo {$actuador->modo}."
-            );
+        if (! $actualizado) {
+            return redirect('/control')->with('error', "No existe el actuador {$tipo}.");
         }
 
         return redirect('/control')
             ->with('success', "Modo de {$tipo} actualizado correctamente.");
+    }
+
+    // APUNTE:
+    // Este método evita repetir el mismo flujo para motor y ventilador:
+    // valida el estado recibido, actualiza el actuador y deja trazabilidad
+    // en la bitácora mediante EventoService.
+    private function actualizarActuadorManual(string $tipo, string $estado, string $mensajeExito)
+    {
+        if (ActuadorService::normalizarEstado($estado) === null) {
+            return redirect('/control')->with('error', "Estado no válido para {$tipo}.");
+        }
+
+        $actualizado = $this->actuadores->actualizarEstadoManual(
+            $tipo,
+            $estado,
+            $this->produccionActiva()?->id
+        );
+
+        if (! $actualizado) {
+            return redirect('/control')->with('error', "No existe el actuador {$tipo}.");
+        }
+
+        return redirect('/control')->with('success', $mensajeExito);
+    }
+
+    private function produccionActiva(): ?Produccion
+    {
+        return Produccion::where('estado', 'En proceso')->first();
     }
 }

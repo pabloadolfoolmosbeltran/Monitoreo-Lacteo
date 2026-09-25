@@ -6,18 +6,27 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $consulta = User::where('activo', true);
+        $request->validate([
+            'buscar' => 'nullable|string|max:100',
+            'estado' => 'nullable|in:eliminados',
+        ]);
+
+        $eliminados = $request->input('estado') === 'eliminados';
+        abort_unless($request->user()?->rol === 'Administrador', 403);
+
+        $consulta = User::where('activo', ! $eliminados)
+            ->whereIn('rol', ['Administrador', 'Trabajador']);
 
         if ($request->filled('buscar')) {
             $consulta->where(function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->buscar . '%')
-                      ->orWhere('email', 'like', '%' . $request->buscar . '%')
-                      ->orWhere('nombre_unidad_productiva', 'like', '%' . $request->buscar . '%');
+                      ->orWhere('email', 'like', '%' . $request->buscar . '%');
             });
         }
 
@@ -25,7 +34,7 @@ class UserController extends Controller
                              ->paginate(10)
                              ->withQueryString();
 
-        return view('usuarios.index', compact('usuarios'));
+        return view('usuarios.index', compact('usuarios', 'eliminados'));
     }
 
     public function create()
@@ -35,26 +44,11 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|confirmed|min:8',
-            'telefono' => 'nullable|string|max:20',
-            'direccion' => 'nullable|string|max:255',
-            'nombre_unidad_productiva' => 'nullable|string|max:255',
-            'rol' => 'required|in:Administrador,Trabajador',
-        ]);
+        $datos = $this->validarUsuario($request);
+        $datos['password'] = Hash::make($datos['password']);
+        $datos['activo'] = true;
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion,
-            'nombre_unidad_productiva' => $request->nombre_unidad_productiva,
-            'rol' => $request->rol,
-            'activo' => true,
-        ]);
+        User::create($datos);
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario registrado correctamente.');
     }
@@ -66,30 +60,15 @@ class UserController extends Controller
 
     public function update(Request $request, User $usuario)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $usuario->id,
-            'telefono' => 'nullable|string|max:20',
-            'direccion' => 'nullable|string|max:255',
-            'nombre_unidad_productiva' => 'nullable|string|max:255',
-            'rol' => 'required|in:Administrador,Trabajador',
-        ]);
+        $datos = $this->validarUsuario($request, $usuario);
 
-        $data = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'telefono' => $request->telefono,
-            'direccion' => $request->direccion,
-            'nombre_unidad_productiva' => $request->nombre_unidad_productiva,
-            'rol' => $request->rol,
-        ];
-
-        if ($request->filled('password')) {
-            $request->validate(['password' => 'confirmed|min:8']);
-            $data['password'] = Hash::make($request->password);
+        if (! empty($datos['password'])) {
+            $datos['password'] = Hash::make($datos['password']);
+        } else {
+            unset($datos['password']);
         }
 
-        $usuario->update($data);
+        $usuario->update($datos);
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
@@ -104,5 +83,40 @@ class UserController extends Controller
         $usuario->update(['activo' => false]);
 
         return redirect()->route('usuarios.index')->with('success', 'Usuario desactivado correctamente.');
+    }
+
+    public function restore(Request $request, User $usuario)
+    {
+        abort_unless($request->user()?->rol === 'Administrador', 403);
+
+        $usuario->update(['activo' => true]);
+
+        return redirect()->route('usuarios.index', ['estado' => 'eliminados'])
+            ->with('success', 'Usuario restablecido correctamente.');
+    }
+
+    // APUNTE:
+    // Este método valida el formulario de usuarios. Al editar, ignora el correo
+    // del usuario actual para no marcarlo como duplicado contra sí mismo.
+    private function validarUsuario(Request $request, ?User $usuario = null): array
+    {
+        $correoUnico = Rule::unique('users', 'email');
+
+        if ($usuario) {
+            $correoUnico->ignore($usuario);
+        }
+
+        return $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                $correoUnico,
+            ],
+            'password' => [$usuario ? 'nullable' : 'required', 'confirmed', 'min:8'],
+            'telefono' => 'nullable|string|max:20',
+            'direccion' => 'nullable|string|max:255',
+            'rol' => 'required|in:Administrador,Trabajador',
+        ]);
     }
 }

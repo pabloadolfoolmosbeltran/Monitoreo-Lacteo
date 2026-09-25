@@ -19,7 +19,6 @@ class User extends Authenticatable
         'password',
         'telefono',
         'direccion',
-        'nombre_unidad_productiva',
         'rol',
         'activo',
     ];
@@ -48,9 +47,9 @@ class User extends Authenticatable
         return $this->hasMany(Evento::class);
     }
 
-    public function consignaciones(): HasMany
+    public function ingresosRegistrados(): HasMany
     {
-        return $this->hasMany(Consignacion::class);
+        return $this->hasMany(IngresoProductor::class, 'user_id');
     }
 
     public function ventas(): HasMany
@@ -58,13 +57,13 @@ class User extends Authenticatable
         return $this->hasMany(Venta::class);
     }
 
-    public function liquidaciones(): HasMany
+    public function ajustesInventarioCreados(): HasMany
     {
-        return $this->hasMany(Liquidacion::class);
+        return $this->hasMany(AjusteInventario::class, 'creado_por');
     }
 
-    public function devoluciones(): HasMany
+    public function descartesProductosCreados(): HasMany
     {
-        return $this->hasMany(Devolucion::class);
+        return $this->hasMany(DescarteProducto::class, 'creado_por');
     }
 }

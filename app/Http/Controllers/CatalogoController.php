@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Presentacion;
 use App\Models\Producto;
-use App\Models\User;
+use App\Models\Productor;
 use Illuminate\Http\Request;
 
 class CatalogoController extends Controller
@@ -61,15 +61,13 @@ class CatalogoController extends Controller
         return view('catalogo.nosotros');
     }
 
-    // Funcion Para Contacto
     public function contacto()
     {
-        $productores = User::where('activo', true)
-            ->where('rol', 'Administrador')
+        $productores = Productor::activos()
             ->whereNotNull('nombre_unidad_productiva')
             ->whereNotNull('direccion')
             ->orderBy('nombre_unidad_productiva')
-            ->get(['name', 'telefono', 'direccion', 'nombre_unidad_productiva']);
+            ->get(['nombres', 'primer_apellido', 'telefono', 'direccion', 'nombre_unidad_productiva']);
 
         return view('catalogo.contacto', compact('productores'));
     }

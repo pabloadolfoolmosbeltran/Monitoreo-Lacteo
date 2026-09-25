@@ -3,16 +3,17 @@
 namespace App\Exports;
 
 use App\Models\Produccion;
+use App\Services\ReporteProduccionService;
 use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles, WithTitle
+class ProduccionesExport implements FromCollection, ShouldAutoSize, WithHeadings, WithStyles, WithTitle
 {
     /**
      * Nombre de la pestaña u hoja de cálculo
@@ -27,74 +28,51 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
      */
     public function collection()
     {
-        return Produccion::with(['user', 'producto'])->orderByDesc('id')->get()->map(function ($produccion) {
-            
-            // Calculamos la duración de forma idéntica a los reportes
-            $duracion = 'N/A';
-            if ($produccion->fecha_inicio) {
-                $fin = $produccion->fecha_fin ?? now();
-                $diff = $produccion->fecha_inicio->diff($fin);
+        $reportes = app(ReporteProduccionService::class);
 
-                $partes = [];
-                if ($diff->d > 0) $partes[] = $diff->d . ' ' . ($diff->d == 1 ? 'día' : 'días');
-                if ($diff->h > 0) $partes[] = $diff->h . ' ' . ($diff->h == 1 ? 'hora' : 'horas');
-                if ($diff->i > 0) $partes[] = $diff->i . ' ' . ($diff->i == 1 ? 'minuto' : 'minutos');
-
-                $duracion = count($partes) > 0 ? implode(', ', $partes) : 'Menos de un minuto';
-                if (!$produccion->fecha_fin) {
-                    $duracion .= ' (En curso)';
-                }
-            }
-
-            // Total de lecturas con fallback seguro
-            $totalLecturas = $produccion->total_lecturas ?? $produccion->lecturas()->count();
+        return Produccion::with(['user', 'producto'])->orderByDesc('id')->get()->map(function ($produccion) use ($reportes) {
+            $datosReporte = $reportes->calcularDatos($produccion);
 
             // Mapeo del tipo de cuajo (Formato legible)
-            $tipoCuajo = match($produccion->tipo_cuajo) {
+            $tipoCuajo = match ($produccion->tipo_cuajo) {
                 'liquido' => 'Líquido',
-                'polvo'   => 'En Polvo',
-                'pastilla'=> 'Pastilla',
-                default   => $produccion->tipo_cuajo ?? 'N/A'
+                'polvo' => 'En Polvo',
+                'pastilla' => 'Pastilla',
+                default => $produccion->tipo_cuajo ?? 'N/A'
             };
 
-            // Unidad de medida según el tipo de cuajo
-            $unidadCuajo = match($produccion->tipo_cuajo) {
-                'liquido' => 'mL',
-                'polvo'   => 'g',
-                'pastilla'=> 'pastilla(s)',
-                default   => 'unid.'
-            };
+            $unidadCuajo = $produccion->producto?->unidad_cuajo ?? 'unid.';
 
             // Formateo de cantidades de cuajo
-            $cantidadCuajo = $produccion->cantidad_cuajo 
-                ? number_format($produccion->cantidad_cuajo, 2) . ' ' . $unidadCuajo 
+            $cantidadCuajo = $produccion->cantidad_cuajo
+                ? number_format($produccion->cantidad_cuajo, 2).' '.$unidadCuajo
                 : 'N/A';
-                
-            $cuajoRecomendado = $produccion->cuajo_recomendado 
-                ? number_format($produccion->cuajo_recomendado, 2) . ' ' . $unidadCuajo 
+
+            $cuajoRecomendado = $produccion->cuajo_recomendado
+                ? number_format($produccion->cuajo_recomendado, 2).' '.$unidadCuajo
                 : 'N/A';
 
             return [
-                '#' . $produccion->id,
+                '#'.$produccion->id,
                 $produccion->user?->name ?? 'N/A',
                 $produccion->user?->rol ?? 'N/A',
                 $produccion->user?->nombre_unidad_productiva ?? 'N/A',
                 $produccion->producto?->nombre ?? 'N/A',
-                $produccion->cantidad_leche ? number_format($produccion->cantidad_leche, 2) . ' L' : '0 L',
+                $produccion->cantidad_leche ? number_format($produccion->cantidad_leche, 2).' L' : '0 L',
                 $tipoCuajo,
                 $cantidadCuajo,
                 $cuajoRecomendado,
-                number_format($produccion->temperatura_inicial ?? 0, 2) . ' °C',
-                number_format($produccion->temperatura_minima ?? 0, 2) . ' °C',
-                number_format($produccion->temperatura_maxima ?? 0, 2) . ' °C',
-                number_format($produccion->temperatura_final ?? 0, 2) . ' °C',
-                number_format($produccion->temperatura_promedio ?? 0, 2) . ' °C',
-                number_format($produccion->temperatura_objetivo ?? 0, 2) . ' °C',
+                number_format($produccion->temperatura_inicial ?? 0, 2).' °C',
+                number_format($produccion->temperatura_minima ?? 0, 2).' °C',
+                number_format($produccion->temperatura_maxima ?? 0, 2).' °C',
+                number_format($produccion->temperatura_final ?? 0, 2).' °C',
+                number_format($produccion->temperatura_promedio ?? 0, 2).' °C',
+                number_format($produccion->temperatura_objetivo ?? 0, 2).' °C',
                 strtoupper($produccion->estado),
                 $produccion->fecha_inicio ? $produccion->fecha_inicio->format('d/m/Y H:i') : '-',
                 $produccion->fecha_fin ? $produccion->fecha_fin->format('d/m/Y H:i') : 'Activo',
-                $duracion,
-                $totalLecturas . ' lecturas'
+                $datosReporte['duracion'],
+                $datosReporte['totalLecturas'].' lecturas',
             ];
         });
     }
@@ -121,7 +99,7 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Fecha Inicio',
             'Fecha Fin',
             'Duración',
-            'Total Lecturas'
+            'Total Lecturas',
         ];
     }
 
@@ -154,10 +132,10 @@ class ProduccionesExport implements FromCollection, WithHeadings, ShouldAutoSize
         $totalFilas = $sheet->getHighestRow();
         if ($totalFilas > 1) {
             // Centramos ID (Columna A)
-            $sheet->getStyle('A2:A' . $totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
+            $sheet->getStyle('A2:A'.$totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
             // Centramos desde Cantidad Leche hasta Total Lecturas (Columnas F a T)
-            $sheet->getStyle('F2:T' . $totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle('F2:T'.$totalFilas)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
 
         return [];
