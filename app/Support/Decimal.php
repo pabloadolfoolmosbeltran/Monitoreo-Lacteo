@@ -4,6 +4,9 @@ namespace App\Support;
 
 final class Decimal
 {
+    // APUNTE:
+    // Las operaciones de dinero y cantidades comerciales pasan por bcmath para
+    // evitar errores de redondeo típicos de los float en PHP.
     public static function add(mixed $left, mixed $right, int $scale = 2): string
     {
         return bcadd(self::value($left), self::value($right), $scale);

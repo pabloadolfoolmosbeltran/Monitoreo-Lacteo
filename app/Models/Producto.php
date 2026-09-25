@@ -21,9 +21,8 @@ class Producto extends Model
         'tipo_cuajo',
         'cuajo_por_litro',
         'unidad_cuajo',
-        'stock_cuajo',
         'imagen_referencial',
-        'activo'
+        'activo',
     ];
 
     protected $casts = [
@@ -31,7 +30,6 @@ class Producto extends Model
         'temperatura_maxima' => 'float',
         'temperatura_pasteurizacion' => 'float',
         'cuajo_por_litro' => 'float',
-        'stock_cuajo' => 'float',
         'activo' => 'boolean',
     ];
 

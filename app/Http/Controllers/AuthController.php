@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -23,9 +24,17 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        // APUNTE:
+        // El campo activo permite deshabilitar usuarios sin borrar su historial.
+        // Por eso el login solo acepta cuentas activas.
         $credenciales['activo'] = true;
 
-        if (Auth::attempt($credenciales)) {
+        $esUsuarioInterno = User::where('email', $credenciales['email'])
+            ->where('activo', true)
+            ->whereIn('rol', ['Administrador', 'Trabajador'])
+            ->exists();
+
+        if ($esUsuarioInterno && Auth::attempt($credenciales)) {
             $request->session()->regenerate();
             return redirect('/produccion');
         }

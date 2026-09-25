@@ -8,6 +8,7 @@ let alarmaSonando = false;
 let alarmaSilenciada = false;
 let audioCtx = null;
 let beepInterval = null;
+let dashboardInterval = null;
 
 let alertaTemperaturaDisparada = false;
 let alertaFinalizadaDisparada = false;
@@ -17,6 +18,10 @@ let notificacionFinalizadaActiva = false;
 // Guarda el estado de la producción visto en el polling anterior,
 // para solo disparar alertas cuando hay una TRANSICIÓN real y no al cargar la página.
 let estadoProduccionAnterior = null;
+const dashboardConfig = {
+    dashboardUrl: '/api/dashboard',
+    temperaturasUrl: '/api/temperaturas',
+};
 
 // --- FUNCIONES DE AUDIO Y ALERTAS ---
 function reproducirAlarmaSonora() {
@@ -54,11 +59,11 @@ function reproducirAlarmaSonora() {
                 osc.start();
                 osc.stop(audioCtx.currentTime + 0.2);
             } catch (err) {
-                console.log("Error en beep:", err);
+                console.warn("Error en beep:", err);
             }
         }, 400);
     } catch (e) {
-        console.log("Audio bloqueado por navegador:", e);
+        console.warn("Audio bloqueado por navegador:", e);
     }
 }
 
@@ -95,10 +100,22 @@ function aceptarAlertaPanel() {
     }
 }
 
+function inicializarBotonesAlerta() {
+    document.querySelectorAll('[data-silenciar-alarma]').forEach((button) => {
+        button.addEventListener('click', silenciarAlarma);
+    });
+
+    document
+        .querySelector('[data-aceptar-alerta-panel]')
+        ?.addEventListener('click', aceptarAlertaPanel);
+}
+
 // --- GRAFICO CHART.JS ---
 function inicializarGrafico() {
     const canvas = document.getElementById('graficoTemperatura');
     if (!canvas) return;
+
+    if (grafico) grafico.destroy();
 
     grafico = new Chart(canvas, {
         type: 'line',
@@ -129,7 +146,7 @@ function inicializarGrafico() {
 async function actualizarDashboard() {
     try {
 
-        const respuesta = await fetch('/api/dashboard');
+        const respuesta = await fetch(dashboardConfig.dashboardUrl);
         const datos = await respuesta.json();
 
         // Actualizar temperatura
@@ -289,7 +306,7 @@ async function actualizarGrafico() {
     if (!grafico) return;
 
     try {
-        const respuesta = await fetch('/api/temperaturas');
+        const respuesta = await fetch(dashboardConfig.temperaturasUrl);
         const lecturas = await respuesta.json();
 
         const etiquetas = lecturas.map(l => l.t);
@@ -304,13 +321,43 @@ async function actualizarGrafico() {
 }
 
 // --- CICLO DE MONITOREO (Cada 3 segundos) ---
-document.addEventListener("DOMContentLoaded", () => {
+function inicializarDashboard() {
+    if (dashboardInterval) {
+        clearInterval(dashboardInterval);
+        dashboardInterval = null;
+    }
+
+    if (!document.getElementById('dashboard-config')) {
+        if (grafico) {
+            grafico.destroy();
+            grafico = null;
+        }
+        silenciarAlarma();
+        return;
+    }
+
+    cargarConfiguracionDashboard();
+    inicializarBotonesAlerta();
     inicializarGrafico();
     actualizarDashboard();
     actualizarGrafico();
 
-    setInterval(() => {
+    dashboardInterval = setInterval(() => {
         actualizarDashboard();
         actualizarGrafico();
     }, 3000);
-});
+}
+
+document.addEventListener('DOMContentLoaded', inicializarDashboard);
+document.addEventListener('app:content-loaded', inicializarDashboard);
+
+function cargarConfiguracionDashboard() {
+    const configNode = document.getElementById('dashboard-config');
+
+    if (!configNode) {
+        return;
+    }
+
+    dashboardConfig.dashboardUrl = configNode.dataset.dashboardUrl || dashboardConfig.dashboardUrl;
+    dashboardConfig.temperaturasUrl = configNode.dataset.temperaturasUrl || dashboardConfig.temperaturasUrl;
+}

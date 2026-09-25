@@ -1,0 +1,49 @@
+Encontré 2 errores confirmados por pruebas y varias inconsistencias técnicas.
+Errores confirmados
+1. El listado de descartes no muestra las observaciones
+   La prueba espera mostrar “Control semanal”, pero la tabla solo presenta producto, cantidad, pérdida, estado y acciones. El dato se guarda, pero no aparece en el listado.
+   - Vista: [resources/views/descartes-productos/index.blade.php (line 79)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/resources/views/descartes-productos/index.blade.php:79)
+   - Prueba fallida: [tests/Feature/DescarteProductoPagesTest.php (line 29)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/tests/Feature/DescarteProductoPagesTest.php:29)
+2. El reporte de ventas filtra por proveedor, pero no muestra el proveedor
+   La consulta encuentra correctamente ventas asociadas a “Finca Norte”, pero la tabla solo muestra productos, pago, total y detalle. Esto dificulta comprobar visualmente el filtro aplicado.
+   - Vista: [resources/views/reportes/ventas.blade.php (line 123)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/resources/views/reportes/ventas.blade.php:123)
+   - Prueba fallida: [tests/Feature/PanelCommercialRefinementTest.php (line 265)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/tests/Feature/PanelCommercialRefinementTest.php:265)
+Resultado general: 73 pruebas PHP pasan y 2 fallan. Las 10 pruebas JavaScript pasan.
+Riesgos importantes
+3. La API del ESP32 no tiene autenticación
+   Las rutas solamente tienen límite de 60 solicitudes por minuto. No usan token, firma, API key ni autenticación Sanctum. Si el servidor queda accesible desde una red no confiable, alguien podría enviar temperaturas falsas, generar alertas o finalizar una producción.
+   - [routes/api.php (line 6)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/routes/api.php:6)
+4. BCMath es obligatorio, pero no está declarado como requisito
+   Decimal.php y ReporteVentasService.php llaman directamente a bcadd, bcsub, bcmul, bcdiv y bccomp. Sin embargo, composer.json no exige ext-bcmath. En esta computadora funciona porque la extensión está instalada, pero otro servidor podría fallar con “undefined function”.
+   - [app/Support/Decimal.php (line 10)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/app/Support/Decimal.php:10)
+   - [app/Services/ReporteVentasService.php (line 33)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/app/Services/ReporteVentasService.php:33)
+   - [composer.json (line 8)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/composer.json:8)
+5. php artisan db:show falla con la instalación actual de MySQL/MariaDB
+   Laravel consulta performance_schema.session_status, pero esa tabla no existe en la instancia conectada. Las migraciones sí pueden consultarse, pero las herramientas de inspección de Laravel no funcionan completamente.
+   Error concreto:
+   Table 'performance_schema.session_status' doesn't exist
+Inconsistencias y deuda técnica
+6. Migración duplicada y vacía
+   Existen dos migraciones consecutivas con el mismo propósito. La primera agrega temperatura_pasteurizacion; la segunda no realiza ninguna operación.
+   - [2026_07_16_222029_add_temperatura_pasteurizacion_to_configuraciones_table.php (line 9)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/database/migrations/2026_07_16_222029_add_temperatura_pasteurizacion_to_configuraciones_table.php:9)
+   - [2026_07_16_223419_add_temperatura_pasteurizacion_to_configuraciones_table.php (line 12)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/database/migrations/2026_07_16_223419_add_temperatura_pasteurizacion_to_configuraciones_table.php:12)
+7. Configuración de ejemplo todavía es genérica
+   .env.example declara:
+   - APP_NAME=Laravel
+   - idioma en
+   - SQLite como base predeterminada
+   Pero el sistema está en español, tiene nombre propio y actualmente utiliza MySQL. Esto puede confundir una instalación nueva.
+   - [.env.example (line 1)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/.env.example:1)
+8. Código heredado del selector de proveedores
+   supplier-cart.js todavía implementa selección manual de proveedor y tiene pruebas propias, pero no está incluido por Vite ni utilizado en producción. El POS actual usa FEFO automático en servidor.
+   - [resources/js/supplier-cart.js (line 1)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/resources/js/supplier-cart.js:1)
+   - [tests/js/supplier-cart.test.mjs (line 1)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/tests/js/supplier-cart.test.mjs:1)
+9. Rutas y nombres históricos aún presentes
+   Siguen existiendo redirecciones para “consignaciones”, “mis-consignaciones” y “reportes-inventario”, aunque esos módulos ya fueron reemplazados. No rompen el sistema, pero mantienen nomenclatura antigua.
+   - [routes/web.php (line 145)](D:/xampp/htdocs/web3/ProyectoFuncional_7_17_2026_version12/9_11_2026_monitoreo_lacteo_sistema_ventas_funcional_v2/routes/web.php:145)
+10. Detalles menores
+    - public/favicon.ico está vacío, por lo que no existe un favicon funcional.
+    - El proyecto no declara una versión en composer.json ni package.json.
+    - Hay 33 rutas sin nombre; funcionan, pero obligan a usar URLs manuales y dificultan refactorizaciones.
+    - La referencia específica a un sensor DS18B20 no aparece en el código; todo se maneja como sensor térmico genérico.
+No modifiqué código durante este diagnóstico.

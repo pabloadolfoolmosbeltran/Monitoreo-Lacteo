@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
+
 @section('content')
 
 <h2 class="mb-4">
@@ -24,7 +25,7 @@ Nuevo Producto
             <a
                 href="{{ url('/productos') }}"
                 class="btn btn-secondary">
-                Cancelar
+                ← Regresar
             </a>
 
         </form>

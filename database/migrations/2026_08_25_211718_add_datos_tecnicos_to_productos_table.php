@@ -23,9 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('productos', function (Blueprint $table) {
-            Schema::table('productos', function (Blueprint $table) {
             $table->dropColumn(['imagen_referencial', 'cuajo_por_litro']);
-        });
         });
     }
 };

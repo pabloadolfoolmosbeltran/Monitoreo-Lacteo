@@ -2,24 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
+use App\Models\Dispositivo;
 use App\Models\Produccion;
 use App\Models\Producto;
 use App\Models\User;
-use App\Models\Dispositivo;
-use App\Models\Actuador;
+use App\Services\ActuadorService;
 use App\Services\EventoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ProduccionController extends Controller
 {
+    public function __construct(private readonly ActuadorService $actuadores) {}
+
     public function index()
     {
         $usuario = Auth::user();
 
         if ($usuario && $usuario->rol === 'Administrador') {
-            $users = User::where('activo', true)->orderBy('nombre_unidad_productiva')->get();
+            $users = User::where('activo', true)->whereIn('rol', ['Administrador', 'Trabajador'])->orderBy('name')->get();
         } else {
             $users = $usuario ? collect([$usuario]) : collect();
         }
@@ -28,23 +32,17 @@ class ProduccionController extends Controller
             'productos' => Producto::where('activo', true)->get(),
             'users' => $users,
             'produccionActiva' => Produccion::where('estado', 'En proceso')->first(),
-            'usuario' => $usuario
+            'usuario' => $usuario,
         ]);
     }
 
     public function iniciar(Request $request)
     {
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'producto_id' => 'required|exists:productos,id',
-            'cantidad_leche' => 'required|numeric|min:1',
-            'temperatura_objetivo' => 'required|numeric|min:1',
-            'observaciones' => 'nullable|string'
-        ]);
-
+        $datos = $this->validarInicio($request);
         $usuario = Auth::user();
-        if ($usuario && $usuario->rol === 'Trabajador') {
-            $request->merge(['user_id' => $usuario->id]);
+
+        if ($usuario && $usuario->rol !== 'Administrador') {
+            $datos['user_id'] = $usuario->id;
         }
 
         if (Produccion::where('estado', 'En proceso')->exists()) {
@@ -52,68 +50,45 @@ class ProduccionController extends Controller
         }
 
         $dispositivo = Dispositivo::first();
-        if (!$dispositivo) {
+        if (! $dispositivo) {
             return redirect()->back()->with('error', 'No existe un dispositivo ESP32 registrado.');
         }
 
-        $producto = Producto::find($request->producto_id);
-        $insumoTotalRequerido = 0;
+        $detalleInsumo = '';
 
-        if ($producto) {
-            $cuajoPorLitro = (float) ($producto->cuajo_por_litro ?? 0);
-            $insumoTotalRequerido = $request->cantidad_leche * $cuajoPorLitro;
+        $produccion = DB::transaction(function () use ($datos, $dispositivo, &$detalleInsumo) {
+            $producto = Producto::findOrFail($datos['producto_id']);
 
-            if ($cuajoPorLitro > 0) {
-                if ($producto->stock_cuajo < $insumoTotalRequerido) {
-                    $unidad = $producto->unidad_cuajo ?? 'ml';
-                    return redirect()->back()->with('error',
-                        "Stock insuficiente del insumo ({$producto->tipo_cuajo}). " .
-                        "Se requieren {$insumoTotalRequerido} {$unidad} " .
-                        "y solo hay {$producto->stock_cuajo} {$unidad} disponibles."
-                    );
-                }
-                $producto->decrement('stock_cuajo', $insumoTotalRequerido);
-            }
-        }
+            $insumoTotalRequerido = $this->calcularInsumoRequerido(
+                $producto,
+                (float) $datos['cantidad_leche']
+            );
 
-        $produccion = Produccion::create([
-            'user_id' => $request->user_id,
-            'producto_id' => $request->producto_id,
-            'dispositivo_id' => $dispositivo->id,
-            'cantidad_leche' => $request->cantidad_leche,
-            'tipo_cuajo' => $producto->tipo_cuajo ?? 'N/A',
-            'cantidad_cuajo' => $insumoTotalRequerido,
-            'temperatura_objetivo' => $request->temperatura_objetivo,
-            'fecha_inicio' => now(),
-            'estado' => 'En proceso',
-            'etapa' => 'Produccion',
-            'observaciones' => $request->observaciones,
-        ]);
+            $detalleInsumo = $this->detalleInsumo($producto, $insumoTotalRequerido);
 
-        $unidad = $producto->unidad_cuajo ?? 'ml';
-        $detalleInsumo = $insumoTotalRequerido > 0
-            ? " Se descontaron {$insumoTotalRequerido} {$unidad} de insumo."
-            : "";
+            return Produccion::create([
+                'user_id' => $datos['user_id'],
+                'producto_id' => $datos['producto_id'],
+                'dispositivo_id' => $dispositivo->id,
+                'cantidad_leche' => $datos['cantidad_leche'],
+                'tipo_cuajo' => $producto->tipo_cuajo ?? 'N/A',
+                'cantidad_cuajo' => $insumoTotalRequerido,
+                'temperatura_objetivo' => $datos['temperatura_objetivo'],
+                'fecha_inicio' => now(),
+                'estado' => 'En proceso',
+                'etapa' => 'Produccion',
+                'observaciones' => $datos['observaciones'] ?? null,
+            ]);
+        });
 
         EventoService::registrar(
             $produccion->id,
             'Producción',
-            'Producción iniciada. Etapa actual: Producción.' . $detalleInsumo
+            'Producción iniciada. Etapa actual: Producción.'.$detalleInsumo
         );
 
-        $motor = Actuador::where('tipo', 'Motor')->first();
-        if ($motor && $motor->modo == 'Automatico') {
-            $motor->estado = true;
-            $motor->save();
-            EventoService::registrar($produccion->id, 'Motor', 'Motor encendido automáticamente al iniciar producción.');
-        }
-
-        $ventilador = Actuador::where('tipo', 'Ventilador')->first();
-        if ($ventilador && $ventilador->modo == 'Automatico') {
-            $ventilador->estado = true;
-            $ventilador->save();
-            EventoService::registrar($produccion->id, 'Ventilador', 'Ventilador encendido automáticamente al iniciar producción.');
-        }
+        $this->actuadores->encenderSiEstaEnAutomatico(ActuadorService::MOTOR, $produccion->id);
+        $this->actuadores->encenderSiEstaEnAutomatico(ActuadorService::VENTILADOR, $produccion->id);
 
         return redirect('/produccion')
             ->with('success', 'Producción iniciada correctamente y registrada en bitácora.');
@@ -123,13 +98,13 @@ class ProduccionController extends Controller
     {
         $produccion = Produccion::where('estado', 'En proceso')->first();
 
-        if (!$produccion) {
+        if (! $produccion) {
             return redirect()->back()->with('error', 'No existe una producción activa.');
         }
 
         $produccion->update([
             'estado' => 'Finalizada',
-            'fecha_fin' => now()
+            'fecha_fin' => now(),
         ]);
 
         Cache::forget("prod_count_{$produccion->id}");
@@ -138,21 +113,46 @@ class ProduccionController extends Controller
 
         EventoService::registrar($produccion->id, 'Producción', 'La producción fue finalizada correctamente.');
 
-        $motor = Actuador::where('tipo', 'Motor')->first();
-        if ($motor) {
-            $motor->estado = false;
-            $motor->save();
-            EventoService::registrar($produccion->id, 'Motor', 'Motor apagado automáticamente al finalizar producción.');
-        }
-
-        $ventilador = Actuador::where('tipo', 'Ventilador')->first();
-        if ($ventilador) {
-            $ventilador->estado = false;
-            $ventilador->save();
-            EventoService::registrar($produccion->id, 'Ventilador', 'Ventilador apagado automáticamente al finalizar producción.');
-        }
+        $this->actuadores->apagarAlFinalizar(ActuadorService::MOTOR, $produccion->id);
+        $this->actuadores->apagarAlFinalizar(ActuadorService::VENTILADOR, $produccion->id);
 
         return redirect('/produccion')
             ->with('success', 'Producción finalizada correctamente y registrada en bitácora.');
+    }
+
+    // APUNTE:
+    // Estas reglas protegen el inicio del lote antes de tocar stock o crear
+    // registros. La ruta recibe datos del formulario de produccion/index.blade.php.
+    private function validarInicio(Request $request): array
+    {
+        return $request->validate([
+            'user_id' => [
+                'required',
+                Rule::exists('users', 'id')->where(fn ($query) => $query->where('activo', true)->whereIn('rol', ['Administrador', 'Trabajador'])),
+            ],
+            'producto_id' => [
+                'required',
+                Rule::exists('productos', 'id')->where('activo', true),
+            ],
+            'cantidad_leche' => 'required|numeric|min:1|max:999999.99',
+            'temperatura_objetivo' => 'required|numeric|min:1|max:150',
+            'observaciones' => 'nullable|string|max:1000',
+        ]);
+    }
+
+    private function calcularInsumoRequerido(Producto $producto, float $cantidadLeche): float
+    {
+        return round($cantidadLeche * (float) ($producto->cuajo_por_litro ?? 0), 2);
+    }
+
+    private function detalleInsumo(Producto $producto, float $insumoTotalRequerido): string
+    {
+        if ($insumoTotalRequerido <= 0) {
+            return '';
+        }
+
+        $unidad = $producto->unidad_cuajo ?? 'ml';
+
+        return " Recomendación de insumo: {$insumoTotalRequerido} {$unidad}.";
     }
 }

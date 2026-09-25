@@ -9,15 +9,23 @@ use Illuminate\Http\Request;
 use App\Models\Produccion;
 use App\Models\Alerta;
 use App\Models\Dispositivo;
+use App\Services\ActuadorService;
 use App\Services\EventoService;
 use Illuminate\Support\Facades\Cache;
 
 class Esp32Controller extends Controller
 {
+    public function __construct(private readonly ActuadorService $actuadores)
+    {
+    }
+
+    // APUNTE:
+    // Endpoint consumido por el ESP32 o por el dashboard para conocer el estado
+    // actual de motor, ventilador, sensor y producción activa en formato JSON.
     public function estado()
     {
-        $motor = Actuador::where('tipo', 'Motor')->first();
-        $ventilador = Actuador::where('tipo', 'Ventilador')->first();
+        $motor = Actuador::where('tipo', ActuadorService::MOTOR)->first();
+        $ventilador = Actuador::where('tipo', ActuadorService::VENTILADOR)->first();
         $sensor = Sensor::first();
         $produccion = Produccion::where('estado', 'En proceso')->first();
 
@@ -43,8 +51,12 @@ class Esp32Controller extends Controller
 
     public function temperatura(Request $request)
     {
-        $request->validate(['temperatura' => 'required|numeric']);
+        $request->validate(['temperatura' => 'required|numeric|between:-50,150']);
 
+        // APUNTE:
+        // Aquí entra la lectura enviada por el ESP32. Se actualiza el sensor,
+        // se recalculan estadísticas de la producción activa y se generan
+        // alertas si la temperatura alcanza el valor de pasteurización.
         $tempActual = $request->temperatura;
 
         $sensor = Sensor::first();
@@ -109,18 +121,16 @@ class Esp32Controller extends Controller
                 $sensorValido = ($tempActual > -50 && $tempActual < 150);
 
                 if ($sensorValido && $tempActual <= $limiteEnfriamiento) {
-                    $motor = Actuador::where('tipo', 'Motor')->first();
-                    $ventilador = Actuador::where('tipo', 'Ventilador')->first();
-
-                    if ($motor && $motor->modo == 'Automatico' && $motor->estado) {
-                        $motor->update(['estado' => false]);
-                        EventoService::registrar($produccion->id, 'Motor', 'Motor apagado automáticamente.');
-                    }
-
-                    if ($ventilador && $ventilador->modo == 'Automatico' && $ventilador->estado) {
-                        $ventilador->update(['estado' => false]);
-                        EventoService::registrar($produccion->id, 'Ventilador', 'Ventilador apagado automáticamente.');
-                    }
+                    $this->actuadores->apagarAutomaticoSiEstaEncendido(
+                        ActuadorService::MOTOR,
+                        $produccion->id,
+                        'Motor apagado automáticamente.'
+                    );
+                    $this->actuadores->apagarAutomaticoSiEstaEncendido(
+                        ActuadorService::VENTILADOR,
+                        $produccion->id,
+                        'Ventilador apagado automáticamente.'
+                    );
 
                     $produccion->update([
                         'estado' => 'Finalizada',
@@ -176,7 +186,7 @@ class Esp32Controller extends Controller
 
     public function ping(Request $request)
     {
-        $request->validate(['mac_address' => 'required|string']);
+        $request->validate(['mac_address' => 'required|string|max:64']);
 
         $dispositivo = Dispositivo::where('mac_address', $request->mac_address)->first();
 
@@ -191,8 +201,8 @@ class Esp32Controller extends Controller
 
     public function dashboard()
     {
-        $motor = Actuador::where('tipo', 'Motor')->first();
-        $ventilador = Actuador::where('tipo', 'Ventilador')->first();
+        $motor = Actuador::where('tipo', ActuadorService::MOTOR)->first();
+        $ventilador = Actuador::where('tipo', ActuadorService::VENTILADOR)->first();
         $sensor = Sensor::first();
 
         $produccion = Produccion::with('producto')->where('estado', 'En proceso')->first();
@@ -234,8 +244,8 @@ class Esp32Controller extends Controller
     public function alertaPasteurizacion(Request $request)
     {
         $request->validate([
-            'mensaje' => 'required|string',
-            'temperatura_final' => 'required|numeric'
+            'mensaje' => 'required|string|max:255',
+            'temperatura_final' => 'required|numeric|between:-50,150',
         ]);
 
         return response()->json(['success' => true, 'mensaje' => 'Alerta recibida correctamente.']);
@@ -243,7 +253,7 @@ class Esp32Controller extends Controller
 
     public function finalizarProduccionAutomatica(Request $request)
     {
-        $request->validate(['temperatura_final' => 'required|numeric']);
+        $request->validate(['temperatura_final' => 'required|numeric|between:-50,150']);
 
         $produccion = Produccion::where('estado', 'En proceso')->first();
 
@@ -256,8 +266,8 @@ class Esp32Controller extends Controller
         $produccion->estado = 'Finalizada';
         $produccion->save();
 
-        Actuador::where('tipo', 'Motor')->update(['estado' => false]);
-        Actuador::where('tipo', 'Ventilador')->update(['estado' => false]);
+        Actuador::where('tipo', ActuadorService::MOTOR)->update(['estado' => false]);
+        Actuador::where('tipo', ActuadorService::VENTILADOR)->update(['estado' => false]);
 
         EventoService::registrar(
             $produccion->id,
@@ -278,7 +288,7 @@ class Esp32Controller extends Controller
 
     public function pasteurizacion(Request $request)
     {
-        $request->validate(['temperatura' => 'required|numeric']);
+        $request->validate(['temperatura' => 'required|numeric|between:-50,150']);
 
         return response()->json(['success' => true, 'mensaje' => 'Alerta recibida.']);
     }

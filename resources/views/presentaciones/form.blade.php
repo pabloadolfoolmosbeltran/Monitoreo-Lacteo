@@ -54,8 +54,11 @@
     </div>
 
     <div class="col-md-6">
-        <label class="form-label">Stock disponible</label>
-        <input type="number" name="stock" class="form-control" value="{{ old('stock', $presentacion->stock ?? 0) }}" min="0" step="1" required>
+        <label class="form-label">Existencia disponible</label>
+        <input type="text" class="form-control" value="{{ number_format($presentacion->stock ?? 0, 0) }}" readonly>
+        <small>Se actualiza desde entradas, ventas y ajustes por lote.</small>
+        <label class="form-label">Umbral de alerta de existencia</label>
+        <input type="number" name="stock_minimo_alerta" class="form-control" value="{{ old('stock_minimo_alerta', $presentacion->stock_minimo_alerta ?? 5) }}" min="0" step="1">
     </div>
 
     <div class="col-12">

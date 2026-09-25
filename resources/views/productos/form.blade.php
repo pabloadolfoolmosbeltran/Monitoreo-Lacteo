@@ -4,9 +4,8 @@
         type="text"
         name="nombre"
         id="nombre"
-        class="form-control"
+        class="form-control js-product-name"
         value="{{ old('nombre', $producto->nombre ?? '') }}"
-        oninput="this.value = this.value.replace(/[^a-zA-ZÀ-ÿñÑ0-9\s]/g, '')"
         required
     >
     @error('nombre')
@@ -64,30 +63,15 @@
     @enderror
 </div>
 <div class="row">
-    <!-- Unidad de Cuajo -->
-    <div class="col-md-6 mb-3">
+    <div class="col-md-12 mb-3">
         <label for="unidad_cuajo" class="form-label">Unidad de Medida del Cuajo</label>
         <select name="unidad_cuajo" id="unidad_cuajo" class="form-select">
             <option value="ml" {{ old('unidad_cuajo', $producto->unidad_cuajo ?? 'ml') == 'ml' ? 'selected' : '' }}>Mililitros (ml)</option>
             <option value="g" {{ old('unidad_cuajo', $producto->unidad_cuajo ?? '') == 'g' ? 'selected' : '' }}>Gramos (g)</option>
+            <option value="kg" {{ old('unidad_cuajo', $producto->unidad_cuajo ?? '') == 'kg' ? 'selected' : '' }}>Kilogramos (kg)</option>
             <option value="pastilla" {{ old('unidad_cuajo', $producto->unidad_cuajo ?? '') == 'pastilla' ? 'selected' : '' }}>Pastilla(s)</option>
             <option value="gotas" {{ old('unidad_cuajo', $producto->unidad_cuajo ?? '') == 'gotas' ? 'selected' : '' }}>Gotas</option>
         </select>
-    </div>
-
-    <!-- Stock de Cuajo en Almacén -->
-    <div class="col-md-6 mb-3">
-        <label for="stock_cuajo" class="form-label">Stock Actual de Cuajo</label>
-        <input 
-            type="number" 
-            step="0.01" 
-            name="stock_cuajo" 
-            id="stock_cuajo" 
-            class="form-control" 
-            value="{{ old('stock_cuajo', $producto->stock_cuajo ?? 0) }}"
-            placeholder="Ej: 500.00"
-            min="0"
-        >
     </div>
 </div>
 

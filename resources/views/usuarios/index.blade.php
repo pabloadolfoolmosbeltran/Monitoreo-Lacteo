@@ -1,18 +1,18 @@
 @extends('layouts.app')
 
-@push('styles')
-@vite(['resources/css/usuarios.css'])
-@endpush
 
 @section('content')
 
 <div class="container dairy-container pt-3">
     <h2 class="mb-4 fw-bold" style="color: var(--turquoise-primary);">
-        👥 Gestión de Usuarios
+        👥 {{ $eliminados ? 'Usuarios Eliminados' : 'Gestión de Usuarios' }}
     </h2>
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <form action="{{ route('usuarios.index') }}" method="GET" class="d-flex w-100 w-md-50 gap-2">
+            @if($eliminados)
+                <input type="hidden" name="estado" value="eliminados">
+            @endif
             <input
                 type="text"
                 name="buscar"
@@ -25,15 +25,22 @@
             </button>
 
             @if(request('buscar'))
-                <a href="{{ route('usuarios.index') }}" class="btn btn-secondary">
+                <a href="{{ route('usuarios.index', $eliminados ? ['estado' => 'eliminados'] : []) }}" class="btn btn-secondary">
                     Limpiar
                 </a>
             @endif
         </form>
 
-        <a href="{{ route('usuarios.create') }}" class="btn btn-success">
-            ➕ Nuevo Usuario
-        </a>
+        <div class="d-flex gap-2">
+            @if($eliminados)
+                <a href="{{ route('usuarios.index') }}" data-full-navigation class="btn btn-secondary">← Volver a usuarios</a>
+            @else
+                <a href="{{ route('usuarios.create') }}" class="btn btn-success">➕ Nuevo Usuario</a>
+                <a href="{{ route('usuarios.index', ['estado' => 'eliminados']) }}" data-full-navigation class="btn btn-outline-secondary">
+                    <i class="bi bi-archive me-1"></i> Mostrar eliminados
+                </a>
+            @endif
+        </div>
     </div>
 
     @if(session('success'))
@@ -60,19 +67,14 @@
             <th>Email</th>
             <th>Rol</th>
             <th>Teléfono</th>
-            <th>Unidad Productiva</th>
             <th width="180">Acciones</th>
         </tr>
     </thead>
     <tbody>
-    @php
-        $i = 1; // 1. Inicializamos nuestro contador en 1 antes del ciclo
-    @endphp
-
     @forelse($usuarios as $usuario)
         <tr>
             <td>
-                {{ $i }} <!-- Mostramos el número actual -->
+                {{ $usuarios->firstItem() + $loop->index }}
             </td>
             <td>
                 <strong style="color: var(--text-main);">{{ $usuario->name }}</strong>
@@ -81,23 +83,30 @@
                 {{ $usuario->email }}
             </td>
             <td>
-                @if($usuario->rol == 'Administrador')
-                    <span class="badge bg-primary px-2 py-1">
-                        Administrador
-                    </span>
-                @else
-                    <span class="badge bg-success px-2 py-1">
-                        Trabajador
-                    </span>
-                @endif
+                @switch($usuario->rol)
+                    @case('Administrador')
+                        <span class="badge bg-danger px-2 py-1">
+                            Administrador
+                        </span>
+                        @break
+                    @case('Trabajador')
+                        <span class="badge bg-primary px-2 py-1">
+                            Trabajador
+                        </span>
+                        @break
+                @endswitch
             </td>
             <td>
                 {{ $usuario->telefono ?? '-' }}
             </td>
-            <td>
-                {{ $usuario->nombre_unidad_productiva ?? '-' }}
-            </td>
             <td class="action-buttons">
+                @if($eliminados)
+                <form action="{{ route('usuarios.restore', $usuario) }}" method="POST" class="d-inline" data-full-navigation>
+                    @csrf
+                    @method('PATCH')
+                    <button type="submit" class="btn btn-success btn-sm px-2 py-1">Restablecer</button>
+                </form>
+                @else
                 <a
                     href="{{ route('usuarios.edit', $usuario) }}"
                     class="btn btn-warning btn-sm text-dark fw-semibold px-2 py-1">
@@ -107,33 +116,29 @@
                 <form
                     action="{{ route('usuarios.destroy', $usuario) }}"
                     method="POST"
-                    class="d-inline">
+                    class="d-inline"
+                    data-full-navigation>
                     @csrf
                     @method('DELETE')
                     <button
-                        onclick="return confirm('¿Eliminar usuario?')"
+                        data-confirm-message="¿Eliminar usuario?"
                         class="btn btn-danger btn-sm px-2 py-1">
                         Eliminar
                     </button>
                 </form>
+                @endif
             </td>
         </tr>
         
-        @php
-            $i++; // 2. Incrementamos el contador en 1 al terminar cada vuelta del recorrido
-        @endphp
-
     @empty
         <tr>
-            <td colspan="7" class="text-center py-5 text-muted">
-                No existen usuarios registrados.
+            <td colspan="6" class="text-center py-5 text-muted">
+                {{ $eliminados ? 'No hay usuarios eliminados.' : 'No existen usuarios registrados.' }}
             </td>
         </tr>
     @endforelse
     </tbody>
 </table>
-                </tbody>
-            </table>
         </div>
 
         @if($usuarios->hasPages())
@@ -145,7 +150,4 @@
     </div>
 </div>
 
-@push('scripts')
-@vite(['resources/js/usuarios.js'])
-@endpush
 @endsection

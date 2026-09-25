@@ -19,9 +19,10 @@ return new class extends Migration
             $table->string('password');
 
             $table->string('telefono', 20)->nullable();
-        $table->string('direccion')->nullable();
-        $table->string('nombre_unidad_productiva')->nullable();
-        $table->enum('rol', ['Administrador', 'Trabajador'])->default('Trabajador');
+            $table->string('direccion')->nullable();
+            $table->string('nombre_unidad_productiva')->nullable();
+            // Productor se admite solo para importar cuentas históricas; no se puede crear ni autenticar desde el panel.
+            $table->enum('rol', ['Administrador', 'Trabajador', 'Productor'])->default('Trabajador');
             $table->rememberToken();
             $table->timestamps();
         });

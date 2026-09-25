@@ -18,7 +18,11 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/tmp/
 /vendor
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Credenciales locales del firmware ESP32.
+esp32/**/secrets.h

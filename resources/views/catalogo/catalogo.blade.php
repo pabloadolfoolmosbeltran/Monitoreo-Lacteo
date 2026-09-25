@@ -8,7 +8,7 @@
     $totalPresentaciones = $presentaciones->count();
     $productosUnicos = $presentaciones->pluck('producto.nombre')->filter()->unique()->count();
     $presentacionesDisponibles = $presentaciones->filter(function ($presentacion) {
-        return (float) $presentacion->stock > 0;
+        return (int) $presentacion->stock > 0;
     })->count();
 @endphp
 
@@ -182,7 +182,7 @@
             </div>
         </section>
 
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="productosCatalogo">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3" id="productosCatalogo">
 
             @forelse($presentaciones as $presentacion)
 
@@ -193,7 +193,6 @@
                     $envase = $presentacion->envase ?? '';
                     $contenido = $presentacion->contenido ?? '';
                     $unidad = $presentacion->unidad ?? '';
-                    $descripcion = $presentacion->producto->descripcion ?? 'Producto lácteo disponible para consulta comercial.';
                     $imagenCatalogo = $presentacion->imagen_comercial ?: ($presentacion->producto->imagen_referencial ?? null);
                     $conFruta = isset($presentacion->con_fruta) ? (bool) $presentacion->con_fruta : null;
 
@@ -202,8 +201,7 @@
                         $envase . ' ' . $contenido . ' ' . $unidad
                     );
 
-                    $stockDisponible = (float) $presentacion->stock > 0;
-                    $collapseId = 'detalle-' . $presentacion->id;
+                    $stockDisponible = (int) $presentacion->stock > 0;
                 @endphp
 
                 <div
@@ -215,144 +213,57 @@
                     data-stock="{{ $stockDisponible ? 'disponible' : 'agotado' }}"
                     data-fruta="{{ $conFruta === null ? '' : ($conFruta ? 'si' : 'no') }}"
                 >
-                    <article class="catalog-product h-100 {{ $stockDisponible ? '' : 'is-out' }}">
-                        <div class="catalog-product__media">
+                    <article class="catalog-card {{ $stockDisponible ? '' : 'is-out' }}">
+                        <div class="catalog-card__media">
                             @if($imagenCatalogo)
                                 <img
                                     src="{{ asset('storage/' . $imagenCatalogo) }}"
-                                    class="catalog-product__image"
-                                    alt="{{ $presentacion->nombre }}"
+                                    class="catalog-card__image"
+                                    alt="{{ $nombrePresentacion }}"
                                     loading="lazy"
                                 >
                             @else
-                                <div class="catalog-product__placeholder">
+                                <div class="catalog-card__placeholder">
                                     <i class="bi bi-image"></i>
                                 </div>
                             @endif
 
-                            <div class="catalog-product__badges">
-                                @if($stockDisponible)
-                                    <span class="stock-badge stock-badge--available">
-                                        <i class="bi bi-check2-circle"></i>
-                                        Disponible
-                                    </span>
-                                @else
-                                    <span class="stock-badge stock-badge--out">
+                            <div class="catalog-card__badges">
+                                @if(!$stockDisponible)
+                                    <span class="catalog-badge catalog-badge--out">
                                         <i class="bi bi-x-circle"></i>
                                         Agotado
                                     </span>
                                 @endif
 
                                 @if($conFruta === true)
-                                    <span class="fruit-badge">Con fruta</span>
+                                    <span class="catalog-badge catalog-badge--fruit">Con fruta</span>
                                 @endif
                             </div>
                         </div>
 
-                        <div class="catalog-product__body">
-                            <p class="catalog-product__family">
+                        <div class="catalog-card__body">
+                            <span class="catalog-card__family">
                                 {{ $nombreProducto ?: 'Producto lácteo' }}
-                            </p>
+                            </span>
 
-                            <h3>{{ $nombrePresentacion ?: 'Presentación comercial' }}</h3>
+                            <h3 class="catalog-card__name">{{ $nombrePresentacion ?: 'Presentación comercial' }}</h3>
 
-                            <p class="catalog-product__description">
-                                {{ Str::limit($descripcion, 96) }}
-                            </p>
+                            @if($contenido)
+                                <span class="catalog-card__qty">{{ $contenido }} {{ $unidad }}</span>
+                            @endif
 
-                            <div class="catalog-product__facts">
-                                @if($contenido)
-                                    <span>
-                                        <i class="bi bi-cup-straw"></i>
-                                        {{ $contenido }} {{ $unidad }}
-                                    </span>
-                                @endif
-
-                                @if($sabor)
-                                    <span>
-                                        <i class="bi bi-stars"></i>
-                                        {{ $sabor }}
-                                    </span>
-                                @endif
-
-                                @if($envase)
-                                    <span>
-                                        <i class="bi bi-bag"></i>
-                                        {{ $envase }}
-                                    </span>
-                                @endif
-
-                                @if($conFruta !== null)
-                                    <span>
-                                        <i class="bi bi-flower1"></i>
-                                        {{ $conFruta ? 'Con fruta' : 'Sin fruta' }}
-                                    </span>
-                                @endif
+                            <div class="catalog-card__pricing">
+                                <span class="catalog-card__price">Bs {{ number_format($presentacion->precio, 2) }}</span>
+                                <span class="catalog-card__stock {{ $stockDisponible ? 'catalog-card__stock--ok' : '' }}">
+                                    {{ $stockDisponible ? $presentacion->stock . ' disp.' : 'Sin stock' }}
+                                </span>
                             </div>
 
-                            <div class="catalog-product__commercial">
-                                <div>
-                                    <span>Precio</span>
-                                    <strong>Bs {{ number_format($presentacion->precio, 2) }}</strong>
-                                </div>
-
-                                <div class="{{ $stockDisponible ? 'text-success' : 'text-muted' }}">
-                                    <span>Stock</span>
-                                    <strong>{{ $stockDisponible ? $presentacion->stock . ' disp.' : 'Sin stock' }}</strong>
-                                </div>
-                            </div>
-
-                            <div class="catalog-product__actions">
-                                <a href="{{ route('catalogo.detalle', $presentacion) }}" class="btn catalog-product__primary">
-                                    <i class="bi bi-eye"></i>
-                                    Ver producto
-                                </a>
-
-                                <button
-                                    class="catalog-product__toggle"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#{{ $collapseId }}"
-                                    aria-expanded="false"
-                                    aria-controls="{{ $collapseId }}"
-                                    aria-label="Ver detalle de {{ $nombrePresentacion ?: 'producto' }}"
-                                >
-                                    <span>Detalle</span>
-                                    <i class="bi bi-chevron-down"></i>
-                                </button>
-                            </div>
-
-                            <div class="collapse" id="{{ $collapseId }}">
-                                <div class="catalog-product__detail">
-                                    <dl>
-                                        @if($sabor)
-                                            <div>
-                                                <dt>Sabor</dt>
-                                                <dd>{{ $sabor }}</dd>
-                                            </div>
-                                        @endif
-
-                                        @if($envase)
-                                            <div>
-                                                <dt>Envase</dt>
-                                                <dd>{{ $envase }}</dd>
-                                            </div>
-                                        @endif
-
-                                        @if($contenido)
-                                            <div>
-                                                <dt>Contenido</dt>
-                                                <dd>{{ $contenido }} {{ $unidad }}</dd>
-                                            </div>
-                                        @endif
-
-                                        <div>
-                                            <dt>Disponibilidad</dt>
-                                            <dd>{{ $stockDisponible ? $presentacion->stock . ' disponibles' : 'Agotado' }}</dd>
-                                        </div>
-                                    </dl>
-                                </div>
-                            </div>
+                            <a href="{{ route('catalogo.detalle', $presentacion) }}" class="catalog-card__btn">
+                                <i class="bi bi-eye"></i>
+                                Ver producto
+                            </a>
                         </div>
                     </article>
                 </div>

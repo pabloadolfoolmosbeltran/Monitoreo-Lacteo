@@ -138,7 +138,7 @@
             <th>Tipo de Cuajo</th>
             <td>{{ $produccion->tipo_cuajo ?? 'No especificado' }}</td>
             <th>Cantidad de Cuajo</th>
-            <td>{{ isset($produccion->cantidad_cuajo) ? number_format($produccion->cantidad_cuajo, 2) . ' ml / g' : 'No especificado' }}</td>
+            <td>{{ isset($produccion->cantidad_cuajo) ? number_format($produccion->cantidad_cuajo, 2) . ' ' . ($produccion->producto?->unidad_cuajo ?? 'ml') : 'No especificado' }}</td>
         </tr>
         <tr>
             <th>Temperatura Objetivo</th>
